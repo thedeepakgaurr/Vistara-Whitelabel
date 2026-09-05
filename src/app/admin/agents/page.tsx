@@ -38,31 +38,42 @@ export default async function AdminAgentsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-border text-xs text-muted-foreground">
-                  <th className="px-5 py-2.5 font-medium">Name</th>
-                  <th className="px-5 py-2.5 font-medium">Vistara Agent ID</th>
-                  <th className="px-5 py-2.5 font-medium">Assigned to</th>
-                  <th className="px-5 py-2.5 font-medium">Status</th>
-                  <th className="px-5 py-2.5 font-medium">Linked</th>
-                  <th className="px-5 py-2.5 font-medium"></th>
+                <tr className="border-b border-border bg-surface-hover/40 text-xs font-medium text-muted-foreground">
+                  <th className="px-4 py-2 whitespace-nowrap">Name</th>
+                  <th className="px-4 py-2 whitespace-nowrap">Vistara Agent ID</th>
+                  <th className="px-4 py-2 whitespace-nowrap">Assigned to</th>
+                  <th className="px-4 py-2 whitespace-nowrap">Status</th>
+                  <th className="px-4 py-2 whitespace-nowrap">Linked</th>
+                  <th className="px-4 py-2 text-right whitespace-nowrap w-10"></th>
                 </tr>
               </thead>
               <tbody>
                 {agents.map((a) => (
-                  <tr key={a.id} className="border-b border-border last:border-0 hover:bg-surface-hover">
-                    <td className="px-5 py-2.5">
-                      <p className="font-medium text-foreground">{a.name}</p>
-                      {a.description && <p className="text-xs text-muted-foreground">{a.description}</p>}
+                  <tr key={a.id} className="border-b border-border last:border-0 hover:bg-surface-hover/60 transition-colors">
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <p className="font-medium text-foreground text-xs">{a.name}</p>
+                      {a.description && <p className="text-[11px] text-muted-foreground">{a.description}</p>}
                     </td>
-                    <td className="px-5 py-2.5 font-mono text-xs text-muted-foreground">{a.vistara_agent_id}</td>
-                    <td className="px-5 py-2.5 text-muted-foreground">
-                      {a.user_name ? `${a.user_name} (${a.user_email})` : <span className="italic">Unassigned</span>}
+                    <td className="px-4 py-2 whitespace-nowrap">
+                      <span className="inline-block rounded bg-surface-hover border border-border/80 px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground select-all">
+                        {a.vistara_agent_id}
+                      </span>
                     </td>
-                    <td className="px-5 py-2.5">
+                    <td className="px-4 py-2 whitespace-nowrap text-xs">
+                      {a.user_name ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium text-foreground">{a.user_name}</span>
+                          <span className="text-[11px] text-muted-foreground">({a.user_email})</span>
+                        </div>
+                      ) : (
+                        <span className="italic text-muted-foreground">Unassigned</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2 whitespace-nowrap">
                       <Badge tone={a.is_active ? 'success' : 'neutral'}>{a.is_active ? 'Active' : 'Inactive'}</Badge>
                     </td>
-                    <td className="px-5 py-2.5 text-muted-foreground">{formatDateTime(a.created_at)}</td>
-                    <td className="px-5 py-2.5 text-right">
+                    <td className="px-4 py-2 whitespace-nowrap text-xs text-muted-foreground">{formatDateTime(a.created_at)}</td>
+                    <td className="px-4 py-2 text-right whitespace-nowrap">
                       <AgentFormModal
                         users={users}
                         agent={{
