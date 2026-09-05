@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Key, PhoneCall, Megaphone } from 'lucide-react';
+import { ArrowLeft, Key, PhoneCall, Megaphone, Plus } from 'lucide-react';
 import { pool } from '@/lib/db';
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/Card';
 import { Badge, CallStatusBadge, CampaignStatusBadge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { StatCard } from '@/components/ui/StatCard';
 import { EditUserSettingsForm } from '@/components/admin/EditUserSettingsForm';
 import { WalletAdjustModal } from '@/components/admin/WalletAdjustModal';
@@ -132,8 +133,14 @@ export default async function AdminUserDetailPage({ params }: PageProps<'/admin/
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Campaigns</CardTitle>
+          <Link href={`/admin/campaigns/new?userId=${user.id}`}>
+            <Button size="sm" variant="secondary">
+              <Plus className="size-3.5" />
+              New campaign
+            </Button>
+          </Link>
         </CardHeader>
         <CardBody className="p-0">
           <div className="overflow-x-auto">

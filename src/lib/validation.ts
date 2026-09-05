@@ -57,6 +57,13 @@ export const createCampaignSchema = z.object({
   contacts: z.array(contactSchema).min(1, 'Add at least one contact'),
 });
 
+export const adminCreateCampaignSchema = z.object({
+  userId: z.coerce.number().int().positive('Select a user'),
+  agentId: z.coerce.number().int().positive('Select an agent'),
+  name: z.string().trim().min(1, 'Campaign name is required').max(255),
+  contacts: z.array(contactSchema).min(1, 'Add at least one contact'),
+});
+
 export const createAdhocCallSchema = z.object({
   agentId: z.coerce.number().int().positive('Select an agent'),
   phone: z.string().trim().min(5).max(20),

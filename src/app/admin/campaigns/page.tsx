@@ -1,7 +1,9 @@
 import Link from 'next/link';
+import { Plus } from 'lucide-react';
 import { pool } from '@/lib/db';
 import { Card, CardBody } from '@/components/ui/Card';
 import { CampaignStatusBadge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import type { CampaignRow } from '@/types';
 
@@ -37,9 +39,17 @@ export default async function AdminCampaignsPage({ searchParams }: PageProps<'/a
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">Campaigns</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">Every bulk-calling campaign run by your users.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">Campaigns</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">Every bulk-calling campaign run by your users.</p>
+        </div>
+        <Link href="/admin/campaigns/new">
+          <Button size="sm">
+            <Plus className="size-3.5" />
+            New campaign
+          </Button>
+        </Link>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -54,28 +64,28 @@ export default async function AdminCampaignsPage({ searchParams }: PageProps<'/a
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-border text-xs text-muted-foreground">
-                  <th className="px-5 py-2.5 font-medium">Campaign</th>
-                  <th className="px-5 py-2.5 font-medium">User</th>
-                  <th className="px-5 py-2.5 font-medium">Agent</th>
-                  <th className="px-5 py-2.5 font-medium">Status</th>
-                  <th className="px-5 py-2.5 font-medium">Progress</th>
-                  <th className="px-5 py-2.5 font-medium">Cost</th>
-                  <th className="px-5 py-2.5 font-medium">Created</th>
+                <tr className="border-b border-border bg-surface-hover/40 text-xs font-medium text-muted-foreground">
+                  <th className="px-4 py-2 whitespace-nowrap">Campaign</th>
+                  <th className="px-4 py-2 whitespace-nowrap">User</th>
+                  <th className="px-4 py-2 whitespace-nowrap">Agent</th>
+                  <th className="px-4 py-2 whitespace-nowrap">Status</th>
+                  <th className="px-4 py-2 whitespace-nowrap">Progress</th>
+                  <th className="px-4 py-2 whitespace-nowrap">Cost</th>
+                  <th className="px-4 py-2 whitespace-nowrap">Created</th>
                 </tr>
               </thead>
               <tbody>
                 {campaigns.map((c) => (
-                  <tr key={c.id} className="border-b border-border last:border-0 hover:bg-surface-hover">
-                    <td className="px-5 py-2.5">
+                  <tr key={c.id} className="border-b border-border last:border-0 hover:bg-surface-hover/60 transition-colors">
+                    <td className="px-4 py-2 whitespace-nowrap">
                       <Link
                         href={`/admin/campaigns/${c.id}`}
-                        className="font-medium text-foreground hover:text-primary transition-colors"
+                        className="font-medium text-foreground hover:text-primary transition-colors text-xs"
                       >
                         {c.name}
                       </Link>
                     </td>
-                    <td className="px-5 py-2.5">
+                    <td className="px-4 py-2 whitespace-nowrap text-xs">
                       <Link
                         href={`/admin/users/${c.user_id}`}
                         className="text-muted-foreground hover:text-primary transition-colors"
@@ -83,15 +93,15 @@ export default async function AdminCampaignsPage({ searchParams }: PageProps<'/a
                         {c.user_name}
                       </Link>
                     </td>
-                    <td className="px-5 py-2.5 text-muted-foreground">{c.agent_name}</td>
-                    <td className="px-5 py-2.5">
+                    <td className="px-4 py-2 whitespace-nowrap text-xs text-muted-foreground">{c.agent_name}</td>
+                    <td className="px-4 py-2 whitespace-nowrap">
                       <CampaignStatusBadge status={c.status} />
                     </td>
-                    <td className="px-5 py-2.5 text-muted-foreground">
+                    <td className="px-4 py-2 whitespace-nowrap text-xs text-muted-foreground">
                       {c.completed_calls}/{c.total_contacts} ({c.connected_calls} connected)
                     </td>
-                    <td className="px-5 py-2.5 text-muted-foreground">{formatCurrency(Number(c.total_cost))}</td>
-                    <td className="px-5 py-2.5 text-muted-foreground">{formatDateTime(c.created_at)}</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-xs text-muted-foreground">{formatCurrency(Number(c.total_cost))}</td>
+                    <td className="px-4 py-2 whitespace-nowrap text-xs text-muted-foreground">{formatDateTime(c.created_at)}</td>
                   </tr>
                 ))}
                 {campaigns.length === 0 && (
