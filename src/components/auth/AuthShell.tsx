@@ -22,9 +22,7 @@ export function AuthShell({
       />
       <div className="w-full max-w-sm">
         <div className="mb-7 flex flex-col items-center text-center">
-          <div className="mb-3 flex size-10 items-center justify-center rounded-xl bg-primary text-lg font-bold text-primary-foreground shadow-sm shadow-primary/30">
-            {brandName[0]}
-          </div>
+          <img src="/logo.svg" alt={brandName} className="mb-3 size-12 rounded-xl object-contain shadow-sm" />
           <h1 className="text-lg font-semibold tracking-tight text-foreground">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
         </div>

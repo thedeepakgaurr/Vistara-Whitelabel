@@ -13,6 +13,10 @@ const brandName = process.env.NEXT_PUBLIC_BRAND_NAME || "CallDesk";
 export const metadata: Metadata = {
   title: `${brandName} — AI Voice Calling Platform`,
   description: `${brandName} is a voice AI calling platform — campaigns, calls, and billing in one place.`,
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

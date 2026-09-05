@@ -76,9 +76,7 @@ export function AppShell({
   const nav = (
     <>
       <div className="flex h-14 items-center gap-2 px-4">
-        <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
-          {brandName[0]}
-        </div>
+        <img src="/logo.svg" alt={brandName} className="size-7 rounded-lg object-contain" />
         <span className="text-sm font-semibold tracking-tight text-foreground">{brandName}</span>
       </div>
 
@@ -151,7 +149,10 @@ export function AppShell({
           <button onClick={() => setMobileOpen(true)} className="text-foreground">
             <Menu className="size-5" />
           </button>
-          <span className="text-sm font-semibold">{brandName}</span>
+          <div className="flex items-center gap-2">
+            <img src="/logo.svg" alt={brandName} className="size-6 rounded-md object-contain" />
+            <span className="text-sm font-semibold">{brandName}</span>
+          </div>
         </header>
 
         <main className="flex-1 overflow-x-hidden px-4 py-5 md:px-7 md:py-6">

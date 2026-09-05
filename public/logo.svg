@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <linearGradient id="logo-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="50%" stop-color="#7c3aed" />
+      <stop offset="100%" stop-color="#4f46e5" />
+    </linearGradient>
+    <linearGradient id="spark-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#a855f7" />
+    </linearGradient>
+    <filter id="logo-glow" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#7c3aed" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect width="48" height="48" rx="12" fill="url(#logo-bg)" filter="url(#logo-glow)" />
+
+  <!-- Subtle Inner Border Highlight -->
+  <rect x="0.75" y="0.75" width="46.5" height="46.5" rx="11.25" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.2" />
+
+  <!-- Communication / Call Loop -->
+  <path
+    d="M13 20C13 15.0294 17.0294 11 22 11H26C30.9706 11 35 15.0294 35 20V26C35 29.866 31.866 33 28 33H22L16 37V32.35C14.16 30.7 13 28.2 13 25V20Z"
+    fill="#0f0e17"
+    fill-opacity="0.16"
+  />
+
+  <!-- Dynamic AI Voice Soundwave Frequency Bars -->
+  <rect x="15.5" y="21" width="3" height="8" rx="1.5" fill="#ffffff" fill-opacity="0.7" />
+  <rect x="20.5" y="16" width="3" height="18" rx="1.5" fill="#ffffff" />
+  <rect x="25.5" y="13" width="3" height="24" rx="1.5" fill="#ffffff" />
+  <rect x="30.5" y="18" width="3" height="14" rx="1.5" fill="#ffffff" />
+
+  <!-- AI Intelligence Pulse Spark -->
+  <circle cx="30.5" cy="14" r="1.75" fill="url(#spark-grad)" />
+  <circle cx="30.5" cy="14" r="2.75" stroke="#ffffff" stroke-width="0.75" fill="none" opacity="0.9" />
+</svg>
