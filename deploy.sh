@@ -15,3 +15,4 @@ echo "🔄 Restarting application..."
 pm2 restart vistara
 
 echo "✅ Done! Latest changes are live."
+
