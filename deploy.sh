@@ -2,8 +2,11 @@
 set -e
 cd /var/www/vistara
 
+echo "🧹 Discarding local build artifact changes..."
+git reset --hard HEAD
+
 echo "📥 Pulling latest code..."
-git pull
+git pull origin main
 
 echo "📦 Installing new dependencies (if any)..."
 npm install --production=false
@@ -15,6 +18,4 @@ echo "🔄 Restarting application..."
 pm2 restart vistara
 
 echo "✅ Done! Latest changes are live."
-
-# test
 
