@@ -1,12 +1,12 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { UploadCloud } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Input, Label, Select, Textarea } from '@/components/ui/Input';
+import { Input, Label, Select } from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
-import { parseContactsCsv } from '@/lib/csv';
+import { CsvUploadZone } from '@/components/campaigns/CsvUploadZone';
+import type { ParsedContact } from '@/lib/csv';
 
 interface AgentOption {
   id: number;
@@ -16,29 +16,19 @@ interface AgentOption {
 export function CampaignForm({ agents }: { agents: AgentOption[] }) {
   const router = useRouter();
   const toast = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState('');
   const [agentId, setAgentId] = useState(agents[0] ? String(agents[0].id) : '');
-  const [csvText, setCsvText] = useState('');
+  const [contacts, setContacts] = useState<ParsedContact[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const contacts = useMemo(() => parseContactsCsv(csvText), [csvText]);
-
-  async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const text = await file.text();
-    setCsvText(text);
-  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
     if (contacts.length === 0) {
-      setError('Add at least one contact (phone, name) — paste CSV text or upload a file.');
+      setError('Please upload a CSV file with at least one valid contact.');
       return;
     }
 
@@ -97,32 +87,8 @@ export function CampaignForm({ agents }: { agents: AgentOption[] }) {
       </div>
 
       <div>
-        <div className="mb-1.5 flex items-center justify-between">
-          <label htmlFor="csv" className="block text-xs font-medium text-muted-foreground">
-            Contacts (CSV)
-          </label>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-hover"
-          >
-            <UploadCloud className="size-3.5" />
-            Upload .csv file
-          </button>
-          <input ref={fileInputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={onFileChange} />
-        </div>
-        <Textarea
-          id="csv"
-          rows={8}
-          value={csvText}
-          onChange={(e) => setCsvText(e.target.value)}
-          placeholder={'phone,name\n9198XXXXXXX,Rahul Sharma\n9199XXXXXXX,Priya Patel'}
-          className="font-mono text-xs"
-        />
-        <p className="mt-1.5 text-xs text-muted-foreground">
-          First row can be a header (phone,name) or just start listing rows. {contacts.length} contact
-          {contacts.length === 1 ? '' : 's'} detected.
-        </p>
+        <Label>Contacts (CSV File)</Label>
+        <CsvUploadZone onContactsChange={setContacts} />
       </div>
 
       <Button type="submit" loading={loading}>

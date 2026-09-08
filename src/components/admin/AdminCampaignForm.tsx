@@ -1,12 +1,12 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { UploadCloud } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Input, Label, Select, Textarea } from '@/components/ui/Input';
+import { Input, Label, Select } from '@/components/ui/Input';
 import { useToast } from '@/components/ui/Toast';
-import { parseContactsCsv } from '@/lib/csv';
+import { CsvUploadZone } from '@/components/campaigns/CsvUploadZone';
+import type { ParsedContact } from '@/lib/csv';
 import { formatCurrency } from '@/lib/format';
 
 interface UserOption {
@@ -33,7 +33,6 @@ export function AdminCampaignForm({
 }) {
   const router = useRouter();
   const toast = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const initialUser = users.find((u) => u.id === defaultUserId) || users[0];
   const [userId, setUserId] = useState(initialUser ? String(initialUser.id) : '');
@@ -46,11 +45,9 @@ export function AdminCampaignForm({
 
   const [name, setName] = useState('');
   const [agentId, setAgentId] = useState(availableAgents[0] ? String(availableAgents[0].id) : agents[0] ? String(agents[0].id) : '');
-  const [csvText, setCsvText] = useState('');
+  const [contacts, setContacts] = useState<ParsedContact[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const contacts = useMemo(() => parseContactsCsv(csvText), [csvText]);
 
   // Update agentId when user changes if current agent is not available
   function handleUserChange(newUid: string) {
@@ -60,13 +57,6 @@ export function AdminCampaignForm({
     if (matching.length > 0 && !matching.some((a) => String(a.id) === agentId)) {
       setAgentId(String(matching[0].id));
     }
-  }
-
-  async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const text = await file.text();
-    setCsvText(text);
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -84,7 +74,7 @@ export function AdminCampaignForm({
     }
 
     if (contacts.length === 0) {
-      setError('Add at least one contact (phone, name) — paste CSV text or upload a file.');
+      setError('Please upload a CSV file with at least one valid contact.');
       return;
     }
 
@@ -181,29 +171,8 @@ export function AdminCampaignForm({
       </div>
 
       <div>
-        <div className="mb-1.5 flex items-center justify-between">
-          <Label htmlFor="contacts">Contacts (phone, name)</Label>
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-hover"
-          >
-            <UploadCloud className="size-3.5" />
-            Upload CSV
-          </button>
-          <input ref={fileInputRef} type="file" accept=".csv,text/csv,text/plain" onChange={onFileChange} className="hidden" />
-        </div>
-        <Textarea
-          id="contacts"
-          rows={6}
-          value={csvText}
-          onChange={(e) => setCsvText(e.target.value)}
-          placeholder={`+14155552671, John Doe\n+14155552672, Jane Smith`}
-        />
-        <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-          <span>Format: one contact per line, &quot;phone, name&quot; (name is optional)</span>
-          <span className="font-medium text-foreground">{contacts.length} parsed</span>
-        </div>
+        <Label>Contacts (CSV File)</Label>
+        <CsvUploadZone onContactsChange={setContacts} />
       </div>
 
       <div className="flex justify-end gap-2 pt-2">
