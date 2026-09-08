@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useSyncExternalStore, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CheckCircle2, XCircle, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -23,13 +23,13 @@ export function useToast() {
   };
 }
 
+const emptySubscribe = () => () => {};
+
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   // Portals must not render during SSR/hydration (no `document` on the
-  // server) — mount a beat later so the first client render matches the
-  // server's, then add the portal in a subsequent update.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  // server) — useSyncExternalStore provides safe client-side mounted detection.
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
   const push = useCallback((type: ToastType, message: string) => {
     const id = Date.now() + Math.random();

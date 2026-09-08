@@ -10,7 +10,11 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   const session = token ? verifySession(token) : null;
 
-  const isAuthRoute = pathname === '/login' || pathname === '/signup';
+  if (pathname === '/signup') {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  const isAuthRoute = pathname === '/login';
   const isAdminRoute = pathname.startsWith('/admin');
   const isDashboardRoute = pathname.startsWith('/dashboard');
 

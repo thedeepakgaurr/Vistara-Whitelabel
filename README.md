@@ -74,7 +74,7 @@ up by default), then:
 1. Go to **Agents** → link a Vistara AI Agent ID.
 2. Go to **Users** → add a client, set their rates.
 3. Assign the agent to that user (edit the agent, pick the user).
-4. Sign in as that user (or have them sign up at `/signup`) and launch a
+4. Provide the login credentials to the user, have them sign in at `/login`, and launch a
    campaign or grab their API key from **Developer**.
 
 ## Architecture

@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { Suspense } from 'react';
 import { AuthShell } from '@/components/auth/AuthShell';
 import { LoginForm } from '@/components/auth/LoginForm';
@@ -12,12 +11,9 @@ export default function LoginPage() {
       title={`Sign in to ${brandName}`}
       subtitle="Welcome back — enter your details to continue"
       footer={
-        <>
-          Don&apos;t have an account?{' '}
-          <Link href="/signup" className="font-medium text-primary hover:text-primary-hover">
-            Sign up
-          </Link>
-        </>
+        <p className="text-xs text-muted-foreground">
+          Access is invite-only. Contact your administrator for an account.
+        </p>
       }
     >
       <Suspense>
