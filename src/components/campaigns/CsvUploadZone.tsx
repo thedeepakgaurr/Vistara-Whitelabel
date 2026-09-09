@@ -1,8 +1,9 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { UploadCloud, FileSpreadsheet, Trash2, CheckCircle2, AlertCircle, Download } from 'lucide-react';
-import { parseContactsCsv, type ParsedContact } from '@/lib/csv';
+import { UploadCloud, FileSpreadsheet, Trash2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { parseRawCsvRows, type ParsedContact } from '@/lib/csv';
+import { ColumnMappingModal } from '@/components/campaigns/ColumnMappingModal';
 import { cn } from '@/lib/cn';
 
 interface CsvUploadZoneProps {
@@ -16,39 +17,79 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+const ACCEPT =
+  '.csv,.xls,.xlsx,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
 export function CsvUploadZone({ onContactsChange, error }: CsvUploadZoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileSize, setFileSize] = useState<string | null>(null);
+  const [rawHeaders, setRawHeaders] = useState<string[]>([]);
+  const [rawRows, setRawRows] = useState<string[][]>([]);
   const [contacts, setContacts] = useState<ParsedContact[]>([]);
+  const [mapped, setMapped] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [parseError, setParseError] = useState<string | null>(null);
 
   async function processFile(file: File) {
-    if (!file.name.endsWith('.csv') && file.type !== 'text/csv' && file.type !== 'text/plain') {
-      setParseError('Please upload a valid .csv file.');
-      return;
-    }
+    const name = file.name.toLowerCase();
+    setParseError(null);
+    setMapped(false);
+    setContacts([]);
+    onContactsChange([]);
 
     try {
-      const text = await file.text();
-      const parsed = parseContactsCsv(text);
+      let headers: string[] = [];
+      let rows: string[][] = [];
+
+      if (name.endsWith('.xls') || name.endsWith('.xlsx')) {
+        const XLSX = await import('xlsx');
+        const buffer = await file.arrayBuffer();
+        const wb = XLSX.read(buffer, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json<(string | number | boolean)[]>(ws, {
+          header: 1,
+          defval: '',
+        });
+        if (json.length === 0) {
+          setParseError('The spreadsheet appears to be empty.');
+          return;
+        }
+        headers = (json[0] as (string | number | boolean)[]).map((v) => String(v ?? '').trim());
+        rows = json
+          .slice(1)
+          .map((r) => (r as (string | number | boolean)[]).map((v) => String(v ?? '').trim()));
+      } else {
+        const text = await file.text();
+        const parsed = parseRawCsvRows(text);
+        headers = parsed.headers;
+        rows = parsed.rows;
+      }
+
+      if (headers.length === 0) {
+        setParseError('No columns detected. Check that the file has a header row.');
+        return;
+      }
+      if (rows.length === 0) {
+        setParseError('The file has headers but no data rows.');
+        return;
+      }
+
       setFileName(file.name);
       setFileSize(formatFileSize(file.size));
-      setContacts(parsed);
-      setParseError(parsed.length === 0 ? 'No valid contacts found in the file. Ensure phone numbers are present.' : null);
-      onContactsChange(parsed);
+      setRawHeaders(headers);
+      setRawRows(rows);
+      setModalOpen(true);
     } catch {
-      setParseError('Failed to read the CSV file. Please check the file formatting.');
-      onContactsChange([]);
+      setParseError('Failed to read the file. Please ensure it is a valid CSV or Excel file.');
     }
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) {
-      processFile(file);
-    }
+    if (file) processFile(file);
   }
 
   function handleDragOver(e: React.DragEvent) {
@@ -65,34 +106,26 @@ export function CsvUploadZone({ onContactsChange, error }: CsvUploadZoneProps) {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
-    if (file) {
-      processFile(file);
-    }
+    if (file) processFile(file);
   }
 
   function handleRemove() {
     setFileName(null);
     setFileSize(null);
+    setRawHeaders([]);
+    setRawRows([]);
     setContacts([]);
+    setMapped(false);
     setParseError(null);
     onContactsChange([]);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
-  function handleDownloadSample(e: React.MouseEvent) {
-    e.stopPropagation();
-    const csvContent = 'phone,name\n+14155552671,John Doe\n+14155552672,Jane Smith\n+919876543210,Rahul Sharma\n';
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'contacts_sample.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  function handleMappingConfirm(result: ParsedContact[]) {
+    setContacts(result);
+    setMapped(true);
+    setModalOpen(false);
+    onContactsChange(result);
   }
 
   return (
@@ -100,10 +133,24 @@ export function CsvUploadZone({ onContactsChange, error }: CsvUploadZoneProps) {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".csv,text/csv,text/plain"
+        accept={ACCEPT}
         onChange={handleFileChange}
         className="hidden"
       />
+
+      {rawHeaders.length > 0 && (
+        <ColumnMappingModal
+          open={modalOpen}
+          fileName={fileName ?? ''}
+          headers={rawHeaders}
+          rows={rawRows}
+          onConfirm={handleMappingConfirm}
+          onClose={() => {
+            setModalOpen(false);
+            if (!mapped) handleRemove();
+          }}
+        />
+      )}
 
       {!fileName ? (
         <div
@@ -122,24 +169,18 @@ export function CsvUploadZone({ onContactsChange, error }: CsvUploadZoneProps) {
           <div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-primary-soft text-primary transition-transform group-hover:scale-110">
             <UploadCloud className="size-6" />
           </div>
-
-          <h4 className="text-sm font-semibold text-foreground">
-            Click to upload or drag and drop your CSV
-          </h4>
+          <h4 className="text-sm font-semibold text-foreground">Click to upload or drag and drop</h4>
           <p className="mt-1 text-xs text-muted-foreground">
-            Supported format: CSV with phone numbers and optional contact names
+            Supports CSV and Excel (.xls, .xlsx) files
           </p>
-
-          <div className="mt-4 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleDownloadSample}
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-surface-hover hover:text-primary"
-            >
-              <Download className="size-3.5 text-muted-foreground" />
-              Download Sample CSV
-            </button>
-          </div>
+          <p className="mt-3 text-xs text-muted-foreground/60">
+            You&apos;ll be able to map columns after uploading
+          </p>
+          {parseError && (
+            <div className="mt-4 rounded-lg bg-danger-soft px-3 py-2 text-xs text-danger">
+              {parseError}
+            </div>
+          )}
         </div>
       ) : (
         <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
@@ -152,23 +193,30 @@ export function CsvUploadZone({ onContactsChange, error }: CsvUploadZoneProps) {
                 <p className="truncate text-sm font-medium text-foreground">{fileName}</p>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>{fileSize}</span>
-                  <span>•</span>
-                  {contacts.length > 0 ? (
+                  <span>·</span>
+                  {mapped && contacts.length > 0 ? (
                     <span className="inline-flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 className="size-3" />
-                      {contacts.length} contact{contacts.length === 1 ? '' : 's'} parsed
+                      {contacts.length} contact{contacts.length === 1 ? '' : 's'} ready
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 font-medium text-danger">
                       <AlertCircle className="size-3" />
-                      0 valid contacts
+                      No valid contacts
                     </span>
                   )}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setModalOpen(true)}
+                className="rounded-md px-2.5 py-1.5 text-xs font-medium text-primary hover:bg-primary-soft"
+              >
+                Edit mapping
+              </button>
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -187,17 +235,11 @@ export function CsvUploadZone({ onContactsChange, error }: CsvUploadZoneProps) {
             </div>
           </div>
 
-          {parseError && (
-            <div className="mt-3 rounded-lg bg-danger-soft px-3 py-2 text-xs text-danger">
-              {parseError}
-            </div>
-          )}
-
-          {contacts.length > 0 && (
+          {mapped && contacts.length > 0 && (
             <div className="mt-4 border-t border-border pt-3">
               <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
                 <span>Preview (first {Math.min(contacts.length, 5)} rows):</span>
-                {contacts.length > 5 && <span>+{contacts.length - 5} more in file</span>}
+                {contacts.length > 5 && <span>+{contacts.length - 5} more</span>}
               </div>
               <div className="max-h-40 overflow-x-auto rounded-lg border border-border">
                 <table className="w-full text-left text-xs">
@@ -206,6 +248,11 @@ export function CsvUploadZone({ onContactsChange, error }: CsvUploadZoneProps) {
                       <th className="px-3 py-1.5 font-medium">#</th>
                       <th className="px-3 py-1.5 font-medium">Phone</th>
                       <th className="px-3 py-1.5 font-medium">Name</th>
+                      {Object.keys(contacts[0]?.metadata ?? {}).map((k) => (
+                        <th key={k} className="px-3 py-1.5 font-medium">
+                          {k}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -214,6 +261,11 @@ export function CsvUploadZone({ onContactsChange, error }: CsvUploadZoneProps) {
                         <td className="px-3 py-1.5 text-muted-foreground">{i + 1}</td>
                         <td className="px-3 py-1.5 font-mono text-foreground">{c.phone}</td>
                         <td className="px-3 py-1.5 text-foreground">{c.name || '—'}</td>
+                        {Object.keys(contacts[0]?.metadata ?? {}).map((k) => (
+                          <td key={k} className="px-3 py-1.5 text-foreground">
+                            {c.metadata?.[k] || '—'}
+                          </td>
+                        ))}
                       </tr>
                     ))}
                   </tbody>
@@ -224,9 +276,7 @@ export function CsvUploadZone({ onContactsChange, error }: CsvUploadZoneProps) {
         </div>
       )}
 
-      {error && !parseError && (
-        <p className="text-xs text-danger">{error}</p>
-      )}
+      {error && !parseError && <p className="text-xs text-danger">{error}</p>}
     </div>
   );
 }

@@ -1,6 +1,46 @@
 export interface ParsedContact {
   phone: string;
   name?: string;
+  metadata?: Record<string, string>;
+}
+
+/** Returns the header columns and data rows from a raw CSV string */
+export function parseRawCsvRows(text: string): { headers: string[]; rows: string[][] } {
+  const lines = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length === 0) return { headers: [], rows: [] };
+
+  const headers = splitLine(lines[0]);
+  const rows = lines.slice(1).map((l) => splitLine(l));
+  return { headers, rows };
+}
+
+/**
+ * Builds a list of ParsedContact given explicit column index mappings.
+ * metadataCols is an array of { header, colIndex } for any extra context columns.
+ */
+export function buildContactsFromMapping(
+  rows: string[][],
+  phoneIdx: number,
+  nameIdx: number | null,
+  metadataCols: { header: string; colIndex: number }[]
+): ParsedContact[] {
+  const contacts: ParsedContact[] = [];
+  for (const cols of rows) {
+    const phone = cols[phoneIdx]?.trim();
+    if (!phone) continue;
+    const name = nameIdx !== null ? cols[nameIdx]?.trim() || undefined : undefined;
+    const metadata: Record<string, string> = {};
+    for (const { header, colIndex } of metadataCols) {
+      const val = cols[colIndex]?.trim();
+      if (val) metadata[header] = val;
+    }
+    contacts.push({ phone, name, metadata: Object.keys(metadata).length > 0 ? metadata : undefined });
+  }
+  return contacts;
 }
 
 /**
@@ -8,34 +48,20 @@ export interface ParsedContact {
  * (phone,name in any order) or bare "phone,name" / "phone" lines.
  */
 export function parseContactsCsv(text: string): ParsedContact[] {
-  const lines = text
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
+  const { headers, rows } = parseRawCsvRows(text);
+  if (headers.length === 0) return [];
 
-  if (lines.length === 0) return [];
-
+  const lower = headers.map((c) => c.toLowerCase());
   let phoneIdx = 0;
   let nameIdx: number | null = 1;
-  let start = 0;
 
-  const firstCols = splitLine(lines[0]);
-  const lower = firstCols.map((c) => c.toLowerCase());
-  if (lower.includes('phone')) {
-    phoneIdx = lower.indexOf('phone');
-    nameIdx = lower.includes('name') ? lower.indexOf('name') : null;
-    start = 1;
+  if (lower.includes('phone') || lower.includes('mobile') || lower.includes('number')) {
+    phoneIdx = lower.findIndex((h) => h === 'phone' || h === 'mobile' || h === 'number');
+    const nameCol = lower.findIndex((h) => h === 'name');
+    nameIdx = nameCol !== -1 ? nameCol : null;
   }
 
-  const contacts: ParsedContact[] = [];
-  for (let i = start; i < lines.length; i++) {
-    const cols = splitLine(lines[i]);
-    const phone = cols[phoneIdx]?.trim();
-    if (!phone) continue;
-    const name = nameIdx !== null ? cols[nameIdx]?.trim() : undefined;
-    contacts.push({ phone, name: name || undefined });
-  }
-  return contacts;
+  return buildContactsFromMapping(rows, phoneIdx, nameIdx, []);
 }
 
 function splitLine(line: string): string[] {
