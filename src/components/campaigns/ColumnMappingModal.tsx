@@ -43,18 +43,56 @@ export function ColumnMappingModal({
   const [colDescriptions, setColDescriptions] = useState<Record<number, string>>({});
 
   const isPhoneSelected = phoneCol !== NONE_VALUE;
+  const phoneIdx = phoneCol !== NONE_VALUE ? Number(phoneCol) : null;
+  const nameIdx = nameCol !== NONE_VALUE ? Number(nameCol) : null;
 
-  // Selected additional columns
-  const selectedExtraCols = useMemo(() => {
+  function handlePhoneChange(val: string) {
+    setPhoneCol(val);
+    if (val !== NONE_VALUE) {
+      const idx = Number(val);
+      setCheckedCols((prev) => {
+        if (!prev[idx]) return prev;
+        const next = { ...prev };
+        delete next[idx];
+        return next;
+      });
+    }
+  }
+
+  function handleNameChange(val: string) {
+    setNameCol(val);
+    if (val !== NONE_VALUE) {
+      const idx = Number(val);
+      setCheckedCols((prev) => {
+        if (!prev[idx]) return prev;
+        const next = { ...prev };
+        delete next[idx];
+        return next;
+      });
+    }
+  }
+
+  // Columns available for selection as additional context (excludes phone & name)
+  const availableAdditionalCols = useMemo(() => {
     return headers
       .map((header, idx) => ({
         header: header || `Column ${idx + 1}`,
+        idx,
+      }))
+      .filter(({ idx }) => idx !== phoneIdx && idx !== nameIdx);
+  }, [headers, phoneIdx, nameIdx]);
+
+  // Selected additional columns
+  const selectedExtraCols = useMemo(() => {
+    return availableAdditionalCols
+      .filter(({ idx }) => !!checkedCols[idx])
+      .map(({ header, idx }) => ({
+        header,
         colIndex: idx,
         description: colDescriptions[idx]?.trim() || '',
-        checked: !!checkedCols[idx],
-      }))
-      .filter((c) => c.checked);
-  }, [headers, checkedCols, colDescriptions]);
+        checked: true,
+      }));
+  }, [availableAdditionalCols, checkedCols, colDescriptions]);
 
   // Build preview contacts based on current mapping
   const previewContacts = useMemo(() => {
@@ -108,7 +146,7 @@ export function ColumnMappingModal({
             <Select
               id="phoneCol"
               value={phoneCol}
-              onChange={(e) => setPhoneCol(e.target.value)}
+              onChange={(e) => handlePhoneChange(e.target.value)}
               className={cn(!isPhoneSelected && 'border-danger/60')}
             >
               <option value={NONE_VALUE}>— Select column —</option>
@@ -130,7 +168,7 @@ export function ColumnMappingModal({
 
           <div>
             <Label htmlFor="nameCol">Contact Name</Label>
-            <Select id="nameCol" value={nameCol} onChange={(e) => setNameCol(e.target.value)}>
+            <Select id="nameCol" value={nameCol} onChange={(e) => handleNameChange(e.target.value)}>
               {headerOptions}
             </Select>
           </div>
@@ -148,14 +186,14 @@ export function ColumnMappingModal({
           </div>
 
           <div className="max-h-60 overflow-y-auto rounded-xl border border-border divide-y divide-border bg-surface/40">
-            {headers.length === 0 ? (
+            {availableAdditionalCols.length === 0 ? (
               <div className="p-4 text-center text-xs text-muted-foreground">
-                No columns detected in the file.
+                {headers.length === 0
+                  ? 'No columns detected in the file.'
+                  : 'No additional columns available (all columns are mapped above).'}
               </div>
             ) : (
-              headers.map((header, idx) => {
-                const isPhone = phoneCol !== NONE_VALUE && Number(phoneCol) === idx;
-                const isName = nameCol !== NONE_VALUE && Number(nameCol) === idx;
+              availableAdditionalCols.map(({ header, idx }) => {
                 const isChecked = !!checkedCols[idx];
                 const desc = colDescriptions[idx] || '';
 
@@ -181,19 +219,6 @@ export function ColumnMappingModal({
                         <span className="text-sm font-medium text-foreground truncate">
                           {header || `Column ${idx + 1}`}
                         </span>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {isPhone && (
-                          <span className="rounded bg-primary-soft px-1.5 py-0.5 text-[10px] font-medium text-primary">
-                            Phone
-                          </span>
-                        )}
-                        {isName && (
-                          <span className="rounded bg-surface-hover px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                            Name
-                          </span>
-                        )}
                       </div>
                     </label>
 
