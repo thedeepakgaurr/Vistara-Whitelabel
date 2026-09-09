@@ -248,11 +248,21 @@ export function CsvUploadZone({ onContactsChange, error }: CsvUploadZoneProps) {
                       <th className="px-3 py-1.5 font-medium">#</th>
                       <th className="px-3 py-1.5 font-medium">Phone</th>
                       <th className="px-3 py-1.5 font-medium">Name</th>
-                      {Object.keys(contacts[0]?.metadata ?? {}).map((k) => (
-                        <th key={k} className="px-3 py-1.5 font-medium">
-                          {k}
-                        </th>
-                      ))}
+                      {Object.keys(contacts[0]?.metadata ?? {})
+                        .filter((k) => !k.endsWith('_description'))
+                        .map((k) => {
+                          const desc = contacts[0]?.metadata?.[`${k}_description`];
+                          return (
+                            <th key={k} className="px-3 py-1.5 font-medium">
+                              <div>{k}</div>
+                              {desc && (
+                                <div className="text-[10px] font-normal text-muted-foreground italic truncate max-w-[120px]">
+                                  {desc}
+                                </div>
+                              )}
+                            </th>
+                          );
+                        })}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -261,11 +271,13 @@ export function CsvUploadZone({ onContactsChange, error }: CsvUploadZoneProps) {
                         <td className="px-3 py-1.5 text-muted-foreground">{i + 1}</td>
                         <td className="px-3 py-1.5 font-mono text-foreground">{c.phone}</td>
                         <td className="px-3 py-1.5 text-foreground">{c.name || '—'}</td>
-                        {Object.keys(contacts[0]?.metadata ?? {}).map((k) => (
-                          <td key={k} className="px-3 py-1.5 text-foreground">
-                            {c.metadata?.[k] || '—'}
-                          </td>
-                        ))}
+                        {Object.keys(contacts[0]?.metadata ?? {})
+                          .filter((k) => !k.endsWith('_description'))
+                          .map((k) => (
+                            <td key={k} className="px-3 py-1.5 text-foreground">
+                              {c.metadata?.[k] || '—'}
+                            </td>
+                          ))}
                       </tr>
                     ))}
                   </tbody>

@@ -18,15 +18,21 @@ export function parseRawCsvRows(text: string): { headers: string[]; rows: string
   return { headers, rows };
 }
 
+export interface MetadataColConfig {
+  header: string;
+  colIndex: number;
+  description?: string;
+}
+
 /**
  * Builds a list of ParsedContact given explicit column index mappings.
- * metadataCols is an array of { header, colIndex } for any extra context columns.
+ * metadataCols is an array of { header, colIndex, description? } for any extra context columns.
  */
 export function buildContactsFromMapping(
   rows: string[][],
   phoneIdx: number,
   nameIdx: number | null,
-  metadataCols: { header: string; colIndex: number }[]
+  metadataCols: MetadataColConfig[]
 ): ParsedContact[] {
   const contacts: ParsedContact[] = [];
   for (const cols of rows) {
@@ -34,9 +40,12 @@ export function buildContactsFromMapping(
     if (!phone) continue;
     const name = nameIdx !== null ? cols[nameIdx]?.trim() || undefined : undefined;
     const metadata: Record<string, string> = {};
-    for (const { header, colIndex } of metadataCols) {
+    for (const { header, colIndex, description } of metadataCols) {
       const val = cols[colIndex]?.trim();
       if (val) metadata[header] = val;
+      if (description?.trim()) {
+        metadata[`${header}_description`] = description.trim();
+      }
     }
     contacts.push({ phone, name, metadata: Object.keys(metadata).length > 0 ? metadata : undefined });
   }

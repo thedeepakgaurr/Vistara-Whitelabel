@@ -5,7 +5,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Select, Label } from '@/components/ui/Input';
 import { buildContactsFromMapping, type ParsedContact } from '@/lib/csv';
-import { Plus, Trash2, CheckCircle2, ArrowRight } from 'lucide-react';
+import { CheckCircle2, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 interface ColumnMappingModalProps {
@@ -37,56 +37,43 @@ export function ColumnMappingModal({
 
   const [phoneCol, setPhoneCol] = useState(() => guessIdx(['phone', 'mobile', 'number', 'contact']));
   const [nameCol, setNameCol] = useState(() => guessIdx(['name', 'customer', 'lead', 'person']));
-  // Additional context columns: [{header, colIndex}]
-  const [extraCols, setExtraCols] = useState<{ id: number; colIndex: string }[]>([]);
-  const [nextId, setNextId] = useState(0);
+
+  // Additional context columns: checked map and descriptions
+  const [checkedCols, setCheckedCols] = useState<Record<number, boolean>>({});
+  const [colDescriptions, setColDescriptions] = useState<Record<number, string>>({});
 
   const isPhoneSelected = phoneCol !== NONE_VALUE;
+
+  // Selected additional columns
+  const selectedExtraCols = useMemo(() => {
+    return headers
+      .map((header, idx) => ({
+        header: header || `Column ${idx + 1}`,
+        colIndex: idx,
+        description: colDescriptions[idx]?.trim() || '',
+        checked: !!checkedCols[idx],
+      }))
+      .filter((c) => c.checked);
+  }, [headers, checkedCols, colDescriptions]);
 
   // Build preview contacts based on current mapping
   const previewContacts = useMemo(() => {
     if (!isPhoneSelected) return [];
-    const metadataCols = extraCols
-      .filter((e) => e.colIndex !== NONE_VALUE)
-      .map((e) => ({ header: headers[Number(e.colIndex)], colIndex: Number(e.colIndex) }));
     return buildContactsFromMapping(
       rows.slice(0, 5),
       Number(phoneCol),
       nameCol !== NONE_VALUE ? Number(nameCol) : null,
-      metadataCols
+      selectedExtraCols
     );
-  }, [phoneCol, nameCol, extraCols, rows, headers, isPhoneSelected]);
-
-  function addExtraCol() {
-    // Find first header not already mapped
-    const usedIndices = new Set([
-      phoneCol !== NONE_VALUE ? phoneCol : null,
-      nameCol !== NONE_VALUE ? nameCol : null,
-      ...extraCols.map((e) => e.colIndex),
-    ]);
-    const firstFree = headers.findIndex((_, i) => !usedIndices.has(String(i)));
-    setExtraCols((prev) => [...prev, { id: nextId, colIndex: firstFree !== -1 ? String(firstFree) : NONE_VALUE }]);
-    setNextId((n) => n + 1);
-  }
-
-  function removeExtraCol(id: number) {
-    setExtraCols((prev) => prev.filter((e) => e.id !== id));
-  }
-
-  function updateExtraCol(id: number, colIndex: string) {
-    setExtraCols((prev) => prev.map((e) => (e.id === id ? { ...e, colIndex } : e)));
-  }
+  }, [phoneCol, nameCol, selectedExtraCols, rows, isPhoneSelected]);
 
   function handleConfirm() {
     if (!isPhoneSelected) return;
-    const metadataCols = extraCols
-      .filter((e) => e.colIndex !== NONE_VALUE)
-      .map((e) => ({ header: headers[Number(e.colIndex)], colIndex: Number(e.colIndex) }));
     const contacts = buildContactsFromMapping(
       rows,
       Number(phoneCol),
       nameCol !== NONE_VALUE ? Number(nameCol) : null,
-      metadataCols
+      selectedExtraCols
     );
     onConfirm(contacts);
   }
@@ -150,47 +137,85 @@ export function ColumnMappingModal({
         </div>
 
         {/* Additional context columns */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
+        <div className="space-y-3">
+          <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Additional Context
+              Additional Context Columns
             </p>
-            <button
-              type="button"
-              onClick={addExtraCol}
-              disabled={headers.length === 0}
-              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-primary-soft disabled:opacity-40"
-            >
-              <Plus className="size-3.5" />
-              Add column
-            </button>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Select columns to pass as context variables. When checked, enter a description so the AI agent understands what the data represents.
+            </p>
           </div>
 
-          {extraCols.length === 0 && (
-            <p className="text-xs text-muted-foreground">
-              Map additional spreadsheet columns to be sent as metadata with each call (e.g. lead source, product interest).
-            </p>
-          )}
-
-          {extraCols.map((ec) => (
-            <div key={ec.id} className="flex items-center gap-2">
-              <div className="flex-1">
-                <Select
-                  value={ec.colIndex}
-                  onChange={(e) => updateExtraCol(ec.id, e.target.value)}
-                >
-                  {headerOptions}
-                </Select>
+          <div className="max-h-60 overflow-y-auto rounded-xl border border-border divide-y divide-border bg-surface/40">
+            {headers.length === 0 ? (
+              <div className="p-4 text-center text-xs text-muted-foreground">
+                No columns detected in the file.
               </div>
-              <button
-                type="button"
-                onClick={() => removeExtraCol(ec.id)}
-                className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-danger-soft hover:text-danger"
-              >
-                <Trash2 className="size-3.5" />
-              </button>
-            </div>
-          ))}
+            ) : (
+              headers.map((header, idx) => {
+                const isPhone = phoneCol !== NONE_VALUE && Number(phoneCol) === idx;
+                const isName = nameCol !== NONE_VALUE && Number(nameCol) === idx;
+                const isChecked = !!checkedCols[idx];
+                const desc = colDescriptions[idx] || '';
+
+                return (
+                  <div
+                    key={idx}
+                    className={cn(
+                      'p-3 transition-colors',
+                      isChecked ? 'bg-primary-soft/15' : 'hover:bg-surface-hover/40'
+                    )}
+                  >
+                    <label className="flex items-center justify-between gap-2 cursor-pointer select-none">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setCheckedCols((prev) => ({ ...prev, [idx]: checked }));
+                          }}
+                          className="size-4 rounded border-border text-primary focus:ring-primary/20 accent-primary cursor-pointer"
+                        />
+                        <span className="text-sm font-medium text-foreground truncate">
+                          {header || `Column ${idx + 1}`}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {isPhone && (
+                          <span className="rounded bg-primary-soft px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                            Phone
+                          </span>
+                        )}
+                        {isName && (
+                          <span className="rounded bg-surface-hover px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            Name
+                          </span>
+                        )}
+                      </div>
+                    </label>
+
+                    {isChecked && (
+                      <div className="mt-2.5 pl-6.5">
+                        <input
+                          type="text"
+                          value={desc}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setColDescriptions((prev) => ({ ...prev, [idx]: val }));
+                          }}
+                          placeholder={`Description for "${header || `Column ${idx + 1}`}" (e.g. what this value means for the AI)`}
+                          className="w-full rounded-lg border border-border bg-background px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition"
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
 
         {/* Preview */}
@@ -205,13 +230,16 @@ export function ColumnMappingModal({
                   <tr>
                     <th className="pb-1.5 pr-3 font-medium">Phone</th>
                     <th className="pb-1.5 pr-3 font-medium">Name</th>
-                    {extraCols
-                      .filter((e) => e.colIndex !== NONE_VALUE)
-                      .map((e) => (
-                        <th key={e.id} className="pb-1.5 pr-3 font-medium">
-                          {headers[Number(e.colIndex)] || `Col ${Number(e.colIndex) + 1}`}
-                        </th>
-                      ))}
+                    {selectedExtraCols.map((col) => (
+                      <th key={col.colIndex} className="pb-1.5 pr-3 font-medium">
+                        <div>{col.header}</div>
+                        {col.description && (
+                          <div className="text-[10px] font-normal text-muted-foreground italic">
+                            {col.description}
+                          </div>
+                        )}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -219,13 +247,11 @@ export function ColumnMappingModal({
                     <tr key={i}>
                       <td className="py-1.5 pr-3 font-mono text-foreground">{c.phone}</td>
                       <td className="py-1.5 pr-3 text-foreground">{c.name || '—'}</td>
-                      {extraCols
-                        .filter((e) => e.colIndex !== NONE_VALUE)
-                        .map((e) => (
-                          <td key={e.id} className="py-1.5 pr-3 text-foreground">
-                            {c.metadata?.[headers[Number(e.colIndex)]] || '—'}
-                          </td>
-                        ))}
+                      {selectedExtraCols.map((col) => (
+                        <td key={col.colIndex} className="py-1.5 pr-3 text-foreground">
+                          {c.metadata?.[col.header] || '—'}
+                        </td>
+                      ))}
                     </tr>
                   ))}
                 </tbody>

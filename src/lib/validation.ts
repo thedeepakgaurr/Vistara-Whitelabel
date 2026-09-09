@@ -43,6 +43,7 @@ export const adminUpdateAgentSchema = z.object({
 const contactSchema = z.object({
   phone: z.string().trim().min(5).max(20),
   name: z.string().trim().max(255).optional(),
+  metadata: z.record(z.string(), z.string()).optional(),
 });
 
 export const createCampaignSchema = z.object({

@@ -25,8 +25,12 @@ export const POST = withApiErrors(async (request: Request) => {
   if (!agent) return jsonError('Selected agent is not found or inactive', 404);
 
   const validContacts = body.contacts
-    .map((c) => ({ phone: normalizePhone(c.phone), name: c.name || null }))
-    .filter((c): c is { phone: string; name: string | null } => Boolean(c.phone));
+    .map((c) => ({
+      phone: normalizePhone(c.phone),
+      name: c.name || null,
+      metadata: c.metadata || null,
+    }))
+    .filter((c): c is { phone: string; name: string | null; metadata: Record<string, string> | null } => Boolean(c.phone));
 
   if (validContacts.length === 0) {
     return jsonError('None of the provided contacts had a valid phone number', 400);
@@ -44,9 +48,18 @@ export const POST = withApiErrors(async (request: Request) => {
     );
     const id = (result as ResultSetHeader).insertId;
 
-    const values = validContacts.map((c) => [id, targetUser.id, body.agentId, c.phone, c.name, 'queued', 'campaign']);
+    const values = validContacts.map((c) => [
+      id,
+      targetUser.id,
+      body.agentId,
+      c.phone,
+      c.name,
+      'queued',
+      'campaign',
+      c.metadata ? JSON.stringify(c.metadata) : null,
+    ]);
     await conn.query(
-      `INSERT INTO calls (campaign_id, user_id, agent_id, phone, name, status, source) VALUES ?`,
+      `INSERT INTO calls (campaign_id, user_id, agent_id, phone, name, status, source, metadata) VALUES ?`,
       [values]
     );
 
