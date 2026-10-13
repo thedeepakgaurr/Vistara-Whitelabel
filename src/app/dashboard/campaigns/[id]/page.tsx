@@ -10,7 +10,6 @@ import {
   Bot,
   Activity,
   Calendar,
-  Layers,
 } from 'lucide-react';
 import { pool } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';

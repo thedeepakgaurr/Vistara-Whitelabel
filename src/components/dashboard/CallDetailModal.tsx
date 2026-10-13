@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 import {
-  Phone,
-  User,
   Clock,
   Wallet,
   Calendar,
@@ -14,6 +12,7 @@ import {
   Sparkles,
   AlertCircle,
   HelpCircle,
+  Database,
 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { CallStatusBadge, Badge } from '@/components/ui/Badge';
@@ -248,6 +247,26 @@ export function CallDetailModal({ call, open, onClose }: CallDetailModalProps) {
               {Object.entries(answersObj).map(([key, val]) => (
                 <div key={key} className="rounded-lg bg-background border border-border p-2.5 text-xs">
                   <div className="font-medium text-muted-foreground capitalize">{key.replace(/_/g, ' ')}</div>
+                  <div className="font-semibold text-foreground mt-0.5">{String(val)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Custom Context Metadata */}
+        {metadataObj && (
+          <div className="rounded-xl border border-border bg-surface p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Database className="size-4 text-primary" />
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                Custom Contact Context &amp; Metadata
+              </h4>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+              {Object.entries(metadataObj).map(([key, val]) => (
+                <div key={key} className="rounded-lg bg-background border border-border p-2.5 text-xs">
+                  <div className="font-medium text-muted-foreground">{key}</div>
                   <div className="font-semibold text-foreground mt-0.5">{String(val)}</div>
                 </div>
               ))}

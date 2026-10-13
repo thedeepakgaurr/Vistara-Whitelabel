@@ -23,15 +23,23 @@ CREATE TABLE IF NOT EXISTS users (
   UNIQUE KEY users_api_key_unique (api_key)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ── Agents: Vistara AI agents linked into this platform and assigned to a user ──
+-- ── Agents: Vistara AI agents linked or created in this platform and assigned to a user ──
 CREATE TABLE IF NOT EXISTS agents (
   id INT NOT NULL AUTO_INCREMENT,
   vistara_agent_id VARCHAR(255) NOT NULL,
   user_id INT DEFAULT NULL,
   name VARCHAR(255) NOT NULL,
   description VARCHAR(500) DEFAULT NULL,
+  language VARCHAR(50) NOT NULL DEFAULT 'Hindi',
+  calling_method VARCHAR(30) NOT NULL DEFAULT 'traditional',
+  voice VARCHAR(50) NOT NULL DEFAULT 'meera',
+  first_message TEXT DEFAULT NULL,
+  system_instruction MEDIUMTEXT DEFAULT NULL,
+  deliverables JSON DEFAULT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
   is_active TINYINT(1) NOT NULL DEFAULT 1,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY agents_vistara_agent_id_unique (vistara_agent_id),
   KEY agents_user_id_idx (user_id),
@@ -87,6 +95,7 @@ CREATE TABLE IF NOT EXISTS calls (
   KEY calls_agent_id_idx (agent_id),
   KEY calls_vistara_call_id_idx (vistara_call_id),
   KEY calls_status_idx (status),
+  KEY calls_status_created_at_idx (status, created_at),
   CONSTRAINT calls_campaign_id_fk FOREIGN KEY (campaign_id) REFERENCES campaigns (id) ON DELETE CASCADE,
   CONSTRAINT calls_user_id_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
   CONSTRAINT calls_agent_id_fk FOREIGN KEY (agent_id) REFERENCES agents (id) ON DELETE RESTRICT

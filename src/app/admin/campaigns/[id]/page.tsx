@@ -19,7 +19,7 @@ import { CampaignStatusBadge } from '@/components/ui/Badge';
 import { CampaignProgressBar } from '@/components/dashboard/CampaignProgressBar';
 import { CampaignCallsTable } from '@/components/dashboard/CampaignCallsTable';
 import { formatCurrency, formatDateTime, formatDuration } from '@/lib/format';
-import type { CallRow, CampaignRow, UserRow } from '@/types';
+import type { CallRow, CampaignRow } from '@/types';
 
 async function getAdminCampaign(id: string) {
   const [rows] = await pool.query(

@@ -8,7 +8,9 @@
     "start": "next start -p 4000",
     "lint": "eslint",
     "db:schema": "node --env-file=.env scripts/apply-schema.mjs",
-    "db:seed": "node --env-file=.env scripts/seed.mjs"
+    "db:migrate": "node --env-file=.env scripts/migrate-agent-builder.mjs",
+    "db:seed": "node --env-file=.env scripts/seed.mjs",
+    "deploy": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy-production.ps1"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

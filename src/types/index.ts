@@ -23,8 +23,16 @@ export interface AgentRow {
   user_id: number | null;
   name: string;
   description: string | null;
+  language?: string;
+  calling_method?: string;
+  voice?: string;
+  first_message?: string | null;
+  system_instruction?: string | null;
+  deliverables?: unknown;
+  status?: string;
   is_active: number;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface CampaignRow {

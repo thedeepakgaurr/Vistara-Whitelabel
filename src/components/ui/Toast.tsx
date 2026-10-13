@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { CheckCircle2, XCircle, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
-type ToastType = 'success' | 'error';
+type ToastType = 'success' | 'error' | 'info';
 interface Toast {
   id: number;
   type: ToastType;
@@ -20,6 +20,7 @@ export function useToast() {
   return {
     success: (message: string) => ctx.push('success', message),
     error: (message: string) => ctx.push('error', message),
+    info: (message: string) => ctx.push('info', message),
   };
 }
 
@@ -48,13 +49,19 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 key={t.id}
                 className={cn(
                   'fade-in flex items-start gap-2.5 rounded-lg border px-3.5 py-3 text-sm shadow-lg',
-                  t.type === 'success' ? 'border-success/20 bg-surface text-foreground' : 'border-danger/20 bg-surface text-foreground'
+                  t.type === 'success'
+                    ? 'border-success/20 bg-surface text-foreground'
+                    : t.type === 'error'
+                    ? 'border-danger/20 bg-surface text-foreground'
+                    : 'border-primary/20 bg-surface text-foreground'
                 )}
               >
                 {t.type === 'success' ? (
                   <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" />
-                ) : (
+                ) : t.type === 'error' ? (
                   <XCircle className="mt-0.5 size-4 shrink-0 text-danger" />
+                ) : (
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
                 )}
                 <span className="flex-1">{t.message}</span>
                 <button

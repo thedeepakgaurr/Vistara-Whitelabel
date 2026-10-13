@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, Download, Eye, Phone, Volume2, FileText, CheckCircle2, XCircle } from 'lucide-react';
-import { CallStatusBadge, Badge } from '@/components/ui/Badge';
+import { Search, Download, Eye, Phone, Volume2, FileText } from 'lucide-react';
+import { CallStatusBadge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/Card';
 import { CallDetailModal } from '@/components/dashboard/CallDetailModal';
@@ -78,14 +78,16 @@ export function CampaignCallsTable({ calls, campaignName }: CampaignCallsTablePr
       `"${c.created_at}"`,
     ]);
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
+    link.href = url;
     link.setAttribute('download', `${campaignName.replace(/\s+/g, '_')}_calls.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const filterOptions = [

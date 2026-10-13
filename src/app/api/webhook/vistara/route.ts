@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import crypto from 'node:crypto';
 import { applyCallWebhookOutcome } from '@/lib/billing';
 import { dispatchQueuedCalls } from '@/lib/queue';
 
@@ -36,10 +37,18 @@ interface VistaraWebhookPayload {
   };
 }
 
+function isTokenValid(token: string | null, expected: string | undefined): boolean {
+  if (!token || !expected) return false;
+  const a = Buffer.from(token);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
 export async function POST(request: Request) {
   const expected = process.env.WEBHOOK_SHARED_SECRET;
   const token = new URL(request.url).searchParams.get('token');
-  if (!expected || token !== expected) {
+  if (!isTokenValid(token, expected)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

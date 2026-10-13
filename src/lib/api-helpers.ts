@@ -22,7 +22,9 @@ export function withApiErrors<Args extends unknown[]>(
       }
       if (err instanceof Error) {
         console.error('[API ERROR]', err);
-        return jsonError(err.message || 'Internal server error', 500);
+        const isProd = process.env.NODE_ENV === 'production';
+        const msg = isProd ? 'Internal server error' : (err.message || 'Internal server error');
+        return jsonError(msg, 500);
       }
       console.error('[API ERROR]', err);
       return jsonError('Internal server error', 500);

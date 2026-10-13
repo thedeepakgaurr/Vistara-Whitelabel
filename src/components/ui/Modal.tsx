@@ -11,12 +11,14 @@ export function Modal({
   title,
   children,
   widthClassName = 'max-w-md',
+  className,
 }: {
   open: boolean;
   onClose: () => void;
-  title: string;
+  title: React.ReactNode;
   children: React.ReactNode;
   widthClassName?: string;
+  className?: string;
 }) {
   useEffect(() => {
     if (!open) return;
@@ -37,7 +39,7 @@ export function Modal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px] fade-in" onClick={onClose} />
       <div
-        className={cn('relative w-full rounded-xl border border-border bg-surface shadow-xl modal-pop', widthClassName)}
+        className={cn('relative w-full rounded-xl border border-border bg-surface shadow-xl modal-pop', widthClassName, className)}
         role="dialog"
         aria-modal="true"
       >
