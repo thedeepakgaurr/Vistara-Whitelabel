@@ -1,9 +1,11 @@
 import { pool } from '@/lib/db';
+import Link from 'next/link';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { AgentFormModal } from '@/components/admin/AgentFormModal';
 import { VoiceAgentBuilderModal } from '@/components/admin/VoiceAgentBuilderModal';
 import { SyncAgentsModal } from '@/components/admin/SyncAgentsModal';
+import { CopyableAgentId } from '@/components/admin/CopyableAgentId';
 import { formatDateTime } from '@/lib/format';
 import type { AgentRow } from '@/types';
 
@@ -45,9 +47,8 @@ export default async function AdminAgentsPage() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-border bg-surface-hover/40 text-xs font-medium text-muted-foreground">
-                  <th className="px-4 py-2.5 whitespace-nowrap">Agent & Persona</th>
+                  <th className="px-4 py-2.5 whitespace-nowrap">Agent</th>
                   <th className="px-4 py-2.5 whitespace-nowrap">Engine & Voice</th>
-                  <th className="px-4 py-2.5 whitespace-nowrap">Vistara Agent ID</th>
                   <th className="px-4 py-2.5 whitespace-nowrap">Assigned To</th>
                   <th className="px-4 py-2.5 whitespace-nowrap">Status</th>
                   <th className="px-4 py-2.5 whitespace-nowrap">Created</th>
@@ -58,11 +59,15 @@ export default async function AdminAgentsPage() {
                 {agents.map((a) => (
                   <tr key={a.id} className="border-b border-border last:border-0 hover:bg-surface-hover/60 transition-colors">
                     <td className="px-4 py-2.5 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs text-muted-foreground">#{a.id}</span>
-                        <div>
-                          <p className="font-medium text-foreground text-xs">{a.name}</p>
-                          {a.description && <p className="text-[11px] text-muted-foreground truncate max-w-xs">{a.description}</p>}
+                      <div className="flex items-center gap-2.5">
+                        <span className="font-mono text-xs text-muted-foreground/70 font-semibold shrink-0">#{a.id}</span>
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground text-xs truncate" title={a.description || a.name}>
+                            {a.name}
+                          </p>
+                          <div className="mt-0.5">
+                            <CopyableAgentId id={a.vistara_agent_id} />
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -79,20 +84,23 @@ export default async function AdminAgentsPage() {
                       </div>
                     </td>
 
-                    <td className="px-4 py-2.5 whitespace-nowrap">
-                      <span className="inline-block rounded bg-surface-hover border border-border/80 px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground select-all">
-                        {a.vistara_agent_id}
-                      </span>
-                    </td>
-
                     <td className="px-4 py-2.5 whitespace-nowrap text-xs">
                       {a.user_name ? (
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-medium text-foreground">{a.user_name}</span>
-                          <span className="text-[11px] text-muted-foreground">({a.user_email})</span>
+                        <div className="flex flex-col">
+                          {a.user_id ? (
+                            <Link
+                              href={`/admin/users/${a.user_id}`}
+                              className="font-medium text-foreground hover:text-primary transition-colors text-xs"
+                            >
+                              {a.user_name}
+                            </Link>
+                          ) : (
+                            <span className="font-medium text-foreground text-xs">{a.user_name}</span>
+                          )}
+                          <span className="text-[11px] text-muted-foreground">{a.user_email}</span>
                         </div>
                       ) : (
-                        <span className="italic text-muted-foreground">Unassigned</span>
+                        <span className="italic text-muted-foreground text-xs">Unassigned</span>
                       )}
                     </td>
 
@@ -115,7 +123,7 @@ export default async function AdminAgentsPage() {
                 ))}
                 {agents.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-5 py-8 text-center text-sm text-muted-foreground">
+                    <td colSpan={6} className="px-5 py-8 text-center text-sm text-muted-foreground">
                       No voice agents created yet. Click &quot;Voice Agent Builder&quot; to build your first agent or &quot;Sync from Vistara AI&quot; to import existing agents.
                     </td>
                   </tr>
