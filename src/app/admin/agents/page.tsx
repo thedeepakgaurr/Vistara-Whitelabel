@@ -1,9 +1,9 @@
 import { pool } from '@/lib/db';
 import Link from 'next/link';
+import { Sparkles, Sliders } from 'lucide-react';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { AgentFormModal } from '@/components/admin/AgentFormModal';
-import { VoiceAgentBuilderModal } from '@/components/admin/VoiceAgentBuilderModal';
 import { SyncAgentsModal } from '@/components/admin/SyncAgentsModal';
 import { CopyableAgentId } from '@/components/admin/CopyableAgentId';
 import { formatDateTime } from '@/lib/format';
@@ -37,7 +37,13 @@ export default async function AdminAgentsPage() {
         <div className="flex flex-wrap items-center gap-2">
           <SyncAgentsModal users={users} />
           <AgentFormModal users={users} />
-          <VoiceAgentBuilderModal users={users} />
+          <Link
+            href="/admin/agents/new"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+          >
+            <Sparkles className="size-3.5" />
+            Voice Agent Builder
+          </Link>
         </div>
       </div>
 
@@ -62,9 +68,13 @@ export default async function AdminAgentsPage() {
                       <div className="flex items-center gap-2.5">
                         <span className="font-mono text-xs text-muted-foreground/70 font-semibold shrink-0">#{a.id}</span>
                         <div className="min-w-0">
-                          <p className="font-medium text-foreground text-xs truncate" title={a.description || a.name}>
+                          <Link
+                            href={`/admin/agents/${a.id}`}
+                            className="font-medium text-foreground hover:text-primary transition-colors text-xs truncate block"
+                            title={a.description || a.name}
+                          >
                             {a.name}
-                          </p>
+                          </Link>
                           <div className="mt-0.5">
                             <CopyableAgentId id={a.vistara_agent_id} />
                           </div>
@@ -116,7 +126,13 @@ export default async function AdminAgentsPage() {
 
                     <td className="px-4 py-2.5 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
-                        <VoiceAgentBuilderModal users={users} agent={a} />
+                        <Link
+                          href={`/admin/agents/${a.id}`}
+                          className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2.5 py-1 text-xs font-medium text-foreground hover:bg-surface-hover hover:border-primary/40 transition-colors"
+                        >
+                          <Sliders className="size-3" />
+                          Edit & Test
+                        </Link>
                       </div>
                     </td>
                   </tr>
@@ -124,7 +140,11 @@ export default async function AdminAgentsPage() {
                 {agents.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-5 py-8 text-center text-sm text-muted-foreground">
-                      No voice agents created yet. Click &quot;Voice Agent Builder&quot; to build your first agent or &quot;Sync Agents&quot; to import existing agents.
+                      No voice agents created yet. Click{' '}
+                      <Link href="/admin/agents/new" className="text-primary hover:underline">
+                        &quot;Voice Agent Builder&quot;
+                      </Link>{' '}
+                      to build your first agent or &quot;Sync Agents&quot; to import existing agents.
                     </td>
                   </tr>
                 )}
