@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import { AgentFormModal } from '@/components/admin/AgentFormModal';
 import { SyncAgentsModal } from '@/components/admin/SyncAgentsModal';
 import { CopyableAgentId } from '@/components/admin/CopyableAgentId';
+import { DeleteAgentButton } from '@/components/admin/DeleteAgentButton';
 import { formatDateTime } from '@/lib/format';
 import type { AgentRow } from '@/types';
 
@@ -125,7 +126,7 @@ export default async function AdminAgentsPage() {
                     </td>
 
                     <td className="px-4 py-2.5 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1.5">
                         <Link
                           href={`/admin/agents/${a.id}`}
                           className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2.5 py-1 text-xs font-medium text-foreground hover:bg-surface-hover hover:border-primary/40 transition-colors"
@@ -133,6 +134,7 @@ export default async function AdminAgentsPage() {
                           <Sliders className="size-3" />
                           Edit & Test
                         </Link>
+                        <DeleteAgentButton agentId={a.id} agentName={a.name} />
                       </div>
                     </td>
                   </tr>

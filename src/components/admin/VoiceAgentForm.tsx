@@ -253,6 +253,7 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
 
   const [activeTab, setActiveTab] = useState<'persona' | 'prompt' | 'deliverables' | 'test'>('persona');
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Form state
@@ -381,6 +382,32 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
     }
   }
 
+  async function handleDeleteAgent() {
+    if (!agent) return;
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently delete agent "${name}" (#${agent.id})?\n\nThis cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      const resp = await fetch(`/api/admin/agents/${agent.id}`, {
+        method: 'DELETE',
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        toast.error(data.error || 'Failed to delete voice agent');
+        return;
+      }
+      toast.success(`Agent "${name}" deleted successfully`);
+      router.push('/admin/agents');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete agent');
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   async function triggerTestCall() {
     if (!testPhone.trim()) {
       toast.error('Enter a valid phone number (+91...)');
@@ -488,6 +515,19 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          {isEdit && agent?.id && (
+            <Button
+              variant="outline"
+              size="sm"
+              type="button"
+              onClick={handleDeleteAgent}
+              loading={deleting}
+              className="text-danger hover:bg-danger-soft hover:border-danger/40 transition-colors"
+            >
+              <Trash2 className="size-3.5 mr-1" />
+              Delete Agent
+            </Button>
+          )}
           <Link href="/admin/agents">
             <Button variant="outline" size="sm" type="button">
               Discard
@@ -1108,11 +1148,26 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
 
         {/* Bottom Action Footer */}
         <div className="flex items-center justify-between border-t border-border pt-4">
-          <Link href="/admin/agents">
-            <Button type="button" variant="outline" size="sm">
-              Back to Agents
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/admin/agents">
+              <Button type="button" variant="outline" size="sm">
+                Back to Agents
+              </Button>
+            </Link>
+            {isEdit && agent?.id && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDeleteAgent}
+                loading={deleting}
+                className="text-danger hover:bg-danger-soft hover:border-danger/40 transition-colors"
+              >
+                <Trash2 className="size-3.5 mr-1" />
+                Delete Agent
+              </Button>
+            )}
+          </div>
 
           <Button
             type="submit"
