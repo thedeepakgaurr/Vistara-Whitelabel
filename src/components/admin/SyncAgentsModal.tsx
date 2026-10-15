@@ -43,7 +43,7 @@ export function SyncAgentsModal({ users }: { users: UserOption[] }) {
       const resp = await fetch('/api/admin/agents/sync');
       const data = await resp.json();
       if (!resp.ok) {
-        setError(data.error || 'Failed to fetch agents from Vistara AI');
+        setError(data.error || 'Failed to fetch agents from voice engine');
         return;
       }
       setAgents(data.agents || []);
@@ -93,7 +93,7 @@ export function SyncAgentsModal({ users }: { users: UserOption[] }) {
     <>
       <Button size="sm" variant="outline" onClick={handleOpen} className="gap-1.5">
         <RefreshCw className="size-3.5" />
-        Sync from Vistara AI
+        Sync Agents
       </Button>
 
       <Modal
@@ -102,14 +102,14 @@ export function SyncAgentsModal({ users }: { users: UserOption[] }) {
         title={
           <div className="flex items-center gap-2">
             <RefreshCw className="size-4 text-primary" />
-            <span>Sync Agents from Vistara AI Cloud</span>
+            <span>Sync Voice Agents</span>
           </div>
         }
         className="max-w-2xl"
       >
         <div className="space-y-4">
           <p className="text-xs text-muted-foreground">
-            Below are the agents configured under your Vistara AI account. You can import any existing agent with 1 click
+            Below are the agents configured in the cloud voice engine. You can import any existing agent with 1 click
             to make it immediately available for campaigns and automated calling.
           </p>
 
@@ -123,7 +123,7 @@ export function SyncAgentsModal({ users }: { users: UserOption[] }) {
           {loading ? (
             <div className="py-12 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
               <RefreshCw className="size-5 animate-spin text-primary" />
-              <span>Connecting to Vistara AI API...</span>
+              <span>Connecting to voice engine API...</span>
             </div>
           ) : (
             <div className="max-h-96 overflow-y-auto space-y-2 pr-1">
@@ -189,7 +189,7 @@ export function SyncAgentsModal({ users }: { users: UserOption[] }) {
 
               {agents.length === 0 && !error && (
                 <div className="py-8 text-center text-xs text-muted-foreground">
-                  No agents found in your Vistara AI account.
+                  No cloud voice agents found.
                 </div>
               )}
             </div>

@@ -84,13 +84,13 @@ export function AgentFormModal({ users, agent }: { users: UserOption[]; agent?: 
         </Button>
       )}
 
-      <Modal open={open} onClose={() => setOpen(false)} title={isEdit ? 'Edit agent' : 'Link a Vistara AI agent'}>
+      <Modal open={open} onClose={() => setOpen(false)} title={isEdit ? 'Edit agent' : 'Link a voice agent'}>
         <form onSubmit={onSubmit} className="space-y-4">
           {error && <div className="rounded-lg bg-danger-soft px-3 py-2 text-sm text-danger">{error}</div>}
 
           {!isEdit && (
             <div>
-              <Label htmlFor="vistaraAgentId">Vistara AI Agent ID</Label>
+              <Label htmlFor="vistaraAgentId">Voice Agent ID</Label>
               <Input
                 id="vistaraAgentId"
                 required

@@ -24,7 +24,7 @@ export const GET = withApiErrors(async () => {
     remoteList = await listVistaraAgents({ limit: 100 });
   } catch (err) {
     return jsonError(
-      `Failed to connect to Vistara AI: ${err instanceof Error ? err.message : 'Unknown error'}`,
+      `Failed to connect to voice engine: ${err instanceof Error ? err.message : 'Unknown error'}`,
       502
     );
   }
@@ -69,7 +69,7 @@ export const POST = withApiErrors(async (request: Request) => {
   // 1. Fetch agent from Vistara AI
   const remote = await getVistaraAgent(body.vistaraAgentId);
   if (!remote || !remote.id) {
-    return jsonError('Agent not found on Vistara AI', 404);
+    return jsonError('Agent not found in voice engine', 404);
   }
 
   // 2. Attach our webhook URL if missing or outdated

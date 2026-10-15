@@ -173,7 +173,7 @@ export default async function CampaignDetailPage({ params }: PageProps<'/dashboa
               <p className="mt-1 font-semibold text-foreground">{campaign.agent_name}</p>
             </div>
             <div>
-              <span className="text-muted-foreground">Vistara Agent Key</span>
+              <span className="text-muted-foreground">Voice Agent ID</span>
               <p className="mt-1 font-mono text-muted-foreground truncate" title={campaign.vistara_agent_id}>
                 {campaign.vistara_agent_id}
               </p>

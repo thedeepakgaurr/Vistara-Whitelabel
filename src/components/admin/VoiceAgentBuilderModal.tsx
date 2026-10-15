@@ -887,7 +887,7 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
                   <Badge tone="success">x-call-type: test (24/7 Enabled)</Badge>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Places an instant call using Vistara AI test concurrency. You can verify latency, pronunciation, and
+                  Places an instant call using test concurrency. You can verify latency, pronunciation, and
                   extract deliverables in real-time.
                 </p>
 

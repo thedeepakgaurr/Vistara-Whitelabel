@@ -31,7 +31,7 @@ export default async function AdminAgentsPage() {
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-foreground">Voice Agents</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Design, deploy, and assign AI voice agents powered by Vistara AI engine.
+            Design, deploy, and assign AI voice agents powered by CallDesk AI engine.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -124,7 +124,7 @@ export default async function AdminAgentsPage() {
                 {agents.length === 0 && (
                   <tr>
                     <td colSpan={6} className="px-5 py-8 text-center text-sm text-muted-foreground">
-                      No voice agents created yet. Click &quot;Voice Agent Builder&quot; to build your first agent or &quot;Sync from Vistara AI&quot; to import existing agents.
+                      No voice agents created yet. Click &quot;Voice Agent Builder&quot; to build your first agent or &quot;Sync Agents&quot; to import existing agents.
                     </td>
                   </tr>
                 )}

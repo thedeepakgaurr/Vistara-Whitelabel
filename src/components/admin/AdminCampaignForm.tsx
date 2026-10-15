@@ -118,7 +118,7 @@ export function AdminCampaignForm({
   if (agents.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-surface p-6 text-sm text-muted-foreground">
-        No active agents found. Please link a Vistara AI agent first before launching a campaign.
+        No active agents found. Please link or build a voice agent first before launching a campaign.
       </div>
     );
   }
