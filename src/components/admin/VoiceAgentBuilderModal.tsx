@@ -541,7 +541,7 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
           {/* TAB 1: PERSONA & VOICE */}
           {activeTab === 'persona' && (
             <div className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-3">
                 <div>
                   <Label htmlFor="agent-name">Agent Name</Label>
                   <Input
@@ -564,7 +564,31 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
                     ))}
                   </Select>
                 </div>
+
+                <div>
+                  <Label htmlFor="status">Agent Status</Label>
+                  <Select
+                    id="status"
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as 'active' | 'paused')}
+                  >
+                    <option value="active">Active</option>
+                    <option value="paused">Paused</option>
+                  </Select>
+                </div>
               </div>
+
+              {isEdit && (
+                <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isActive}
+                    onChange={(e) => setIsActive(e.target.checked)}
+                    className="size-4 rounded border-border text-primary focus:ring-primary/30"
+                  />
+                  Available in Client Dashboard
+                </label>
+              )}
 
               <div>
                 <Label htmlFor="agent-desc">Description</Label>
@@ -604,33 +628,6 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
                     Native Indian languages & English are optimized for real-time speech.
                   </p>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-6 pt-3 border-t border-border">
-                <div>
-                  <Label htmlFor="status">Agent Status</Label>
-                  <Select
-                    id="status"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as 'active' | 'paused')}
-                    className="w-36"
-                  >
-                    <option value="active">Active</option>
-                    <option value="paused">Paused</option>
-                  </Select>
-                </div>
-
-                {isEdit && (
-                  <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer pt-4">
-                    <input
-                      type="checkbox"
-                      checked={isActive}
-                      onChange={(e) => setIsActive(e.target.checked)}
-                      className="size-4 rounded border-border text-primary focus:ring-primary/30"
-                    />
-                    Available in Client Dashboard
-                  </label>
-                )}
               </div>
             </div>
           )}

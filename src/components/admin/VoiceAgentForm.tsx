@@ -610,7 +610,7 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
                 <CardTitle>Basic Information</CardTitle>
               </CardHeader>
               <CardBody className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-3">
                   <div>
                     <Label htmlFor="agent-name">Agent Name *</Label>
                     <Input
@@ -639,7 +639,35 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
                       ))}
                     </Select>
                   </div>
+
+                  <div>
+                    <Label htmlFor="status">Agent Status</Label>
+                    <Select
+                      id="status"
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value as 'active' | 'paused')}
+                      className="mt-1"
+                    >
+                      <option value="active">Active</option>
+                      <option value="paused">Paused</option>
+                    </Select>
+                  </div>
                 </div>
+
+                {isEdit && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="checkbox"
+                      id="is-active"
+                      checked={isActive}
+                      onChange={(e) => setIsActive(e.target.checked)}
+                      className="rounded border-border text-primary focus:ring-primary size-4"
+                    />
+                    <label htmlFor="is-active" className="text-xs text-foreground font-medium cursor-pointer">
+                      Enabled for Outbound Campaigns
+                    </label>
+                  </div>
+                )}
 
                 <div>
                   <Label htmlFor="agent-desc">Internal Description (optional)</Label>
@@ -698,36 +726,6 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
                       Agent will adapt its dialect and vocabulary to match your chosen primary language.
                     </p>
                   </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-6 pt-4 border-t border-border">
-                  <div>
-                    <Label htmlFor="status">Agent Status</Label>
-                    <Select
-                      id="status"
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value as 'active' | 'paused')}
-                      className="mt-1 w-36"
-                    >
-                      <option value="active">Active</option>
-                      <option value="paused">Paused</option>
-                    </Select>
-                  </div>
-
-                  {isEdit && (
-                    <div className="flex items-center gap-2 mt-4">
-                      <input
-                        type="checkbox"
-                        id="is-active"
-                        checked={isActive}
-                        onChange={(e) => setIsActive(e.target.checked)}
-                        className="rounded border-border text-primary focus:ring-primary size-4"
-                      />
-                      <label htmlFor="is-active" className="text-xs text-foreground font-medium cursor-pointer">
-                        Enabled for Outbound Campaigns
-                      </label>
-                    </div>
-                  )}
                 </div>
               </CardBody>
             </Card>
