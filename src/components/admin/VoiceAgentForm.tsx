@@ -23,8 +23,8 @@ import { Input, Label, Select, Textarea } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/Toast';
 import { CopyableAgentId } from '@/components/admin/CopyableAgentId';
+import { TestCallModal } from '@/components/admin/TestCallModal';
 import { VISTARA_VOICES, type CallingMethod, type DeliverableItem } from '@/lib/vistara';
-import { formatDuration } from '@/lib/format';
 
 export interface UserOption {
   id: number;
@@ -252,7 +252,8 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
   const toast = useToast();
   const isEdit = Boolean(agent && agent.id);
 
-  const [activeTab, setActiveTab] = useState<'persona' | 'prompt' | 'deliverables' | 'test'>('persona');
+  const [activeTab, setActiveTab] = useState<'persona' | 'prompt' | 'deliverables'>('persona');
+  const [showTestModal, setShowTestModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -282,20 +283,7 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
   }
   const [deliverables, setDeliverables] = useState<DeliverableItem[]>(initialDeliverables);
 
-  // Test call state
-  const [testPhone, setTestPhone] = useState('');
-  const [testCallerName, setTestCallerName] = useState('John Doe');
-  const [testCalling, setTestCalling] = useState(false);
-  const [testCallId, setTestCallId] = useState<string | null>(null);
-  const [testCallRecord, setTestCallRecord] = useState<{
-    status: string;
-    duration: number;
-    transcript: string | null;
-    summary: string | null;
-    answers: Record<string, unknown> | null;
-    sentiment: string | null;
-    recording_url: string | null;
-  } | null>(null);
+
 
   function applyTemplate(templateKey: string) {
     const t = TEMPLATES[templateKey];
@@ -361,8 +349,8 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
       router.refresh();
 
       if (!isEdit && data.id) {
-        // Redirect to edit page with test tab active
-        router.push(`/admin/agents/${data.id}?tab=test`);
+        // Redirect to edit page
+        router.push(`/admin/agents/${data.id}`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
@@ -397,77 +385,7 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
     }
   }
 
-  async function triggerTestCall() {
-    if (!testPhone.trim()) {
-      toast.error('Enter a valid phone number (+91...)');
-      return;
-    }
-    const agentIdToCall = agent?.id;
-    if (!agentIdToCall) {
-      toast.error('Please save and publish the agent first before placing a test call');
-      return;
-    }
 
-    setTestCalling(true);
-    setTestCallRecord(null);
-
-    try {
-      const resp = await fetch(`/api/admin/agents/${agentIdToCall}/test-call`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: testPhone.trim(),
-          name: testCallerName || 'Test Lead',
-        }),
-      });
-
-      const data = await resp.json();
-      if (!resp.ok) {
-        toast.error(data.error || 'Failed to trigger test call');
-        setTestCalling(false);
-        return;
-      }
-
-      setTestCallId(String(data.callId || data.vistaraCallId));
-      toast.success('Test call placed! Ringing phone...');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to trigger test call');
-      setTestCalling(false);
-    }
-  }
-
-  useEffect(() => {
-    if (!testCallId || !testCalling) return;
-    const interval = setInterval(async () => {
-      try {
-        const resp = await fetch(`/api/calls/${testCallId}/poll`);
-        if (!resp.ok) return;
-        const res = await resp.json();
-        if (res.call) {
-          const c = res.call;
-          setTestCallRecord({
-            status: c.status,
-            duration: c.duration || 0,
-            transcript: c.transcript,
-            summary: c.summary,
-            answers: typeof c.answers === 'string' ? JSON.parse(c.answers) : c.answers,
-            sentiment: c.sentiment,
-            recording_url: c.recording_url,
-          });
-
-          if (['completed', 'failed', 'busy', 'no-answer'].includes(c.status)) {
-            setTestCalling(false);
-            clearInterval(interval);
-            toast.info(`Test call finished: ${c.status}`);
-          }
-        }
-      } catch (err) {
-        console.warn('Poll error:', err);
-      }
-    }, 2500);
-
-    return () => clearInterval(interval);
-  }, [testCallId, testCalling, toast]);
 
   return (
     <div className="space-y-6">
@@ -512,29 +430,15 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
 
         <div className="flex items-center gap-2">
           {isEdit && agent?.id && (
-            <Link href={`/admin/agents/new?duplicate=${agent.id}`}>
-              <Button
-                variant="outline"
-                size="sm"
-                type="button"
-                className="text-foreground hover:bg-surface-hover hover:border-primary/40 transition-colors"
-              >
-                <Copy className="size-3.5 mr-1" />
-                Duplicate
-              </Button>
-            </Link>
-          )}
-          {isEdit && agent?.id && (
             <Button
+              type="button"
               variant="outline"
               size="sm"
-              type="button"
-              onClick={handleDeleteAgent}
-              loading={deleting}
-              className="text-danger hover:bg-danger-soft hover:border-danger/40 transition-colors"
+              onClick={() => setShowTestModal(true)}
+              className="gap-1.5 border-emerald-600/40 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:border-emerald-600 font-medium transition-colors"
             >
-              <Trash2 className="size-3.5 mr-1" />
-              Delete Agent
+              <PhoneCall className="size-3.5 text-emerald-600" />
+              Test Call
             </Button>
           )}
           <Link href="/admin/agents">
@@ -600,22 +504,6 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
         >
           <CheckCircle2 className="size-4" />
           3. Deliverables ({deliverables.length})
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('test')}
-          className={`flex items-center gap-2 px-4 py-2.5 border-b-2 -mb-px transition-colors ${
-            activeTab === 'test'
-              ? 'border-primary text-primary font-semibold'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <PhoneCall className="size-4" />
-          4. Live Test Call Console
-          {testCalling && (
-            <span className="flex size-2 rounded-full bg-emerald-500 animate-ping" />
-          )}
         </button>
       </div>
 
@@ -947,157 +835,6 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
           </div>
         )}
 
-        {/* TAB 4: LIVE TEST CALL CONSOLE */}
-        {activeTab === 'test' && (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <PhoneCall className="size-5 text-emerald-500" />
-                    <CardTitle>Interactive Live Test Call Dispatch</CardTitle>
-                  </div>
-                  <Badge tone="success">Test Concurrency Ready</Badge>
-                </div>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Dial an instant test call to your personal phone to experience audio latency, pronunciation, and
-                  conversation flow in real time.
-                </p>
-              </CardHeader>
-
-              <CardBody className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="sm:col-span-2">
-                    <Label htmlFor="test-phone">Phone Number (+91 format) *</Label>
-                    <Input
-                      id="test-phone"
-                      value={testPhone}
-                      onChange={(e) => setTestPhone(e.target.value)}
-                      placeholder="+919876543210"
-                      className="mt-1 font-mono text-xs"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="test-name">Caller Name</Label>
-                    <Input
-                      id="test-name"
-                      value={testCallerName}
-                      onChange={(e) => setTestCallerName(e.target.value)}
-                      placeholder="e.g. John Doe"
-                      className="mt-1 text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-2">
-                  <Button
-                    type="button"
-                    onClick={triggerTestCall}
-                    loading={testCalling}
-                    disabled={!isEdit && !agent?.id}
-                    className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
-                  >
-                    <PhoneCall className="size-4" />
-                    {testCalling ? 'Calling phone now...' : 'Dispatch Live Test Call'}
-                  </Button>
-
-                  {!isEdit && !agent?.id && (
-                    <span className="text-xs text-amber-500 font-medium">
-                      * Please click &quot;Publish & Create Agent&quot; once before placing test calls.
-                    </span>
-                  )}
-                </div>
-
-                {/* Real-time Call Tracker */}
-                {testCallRecord && (
-                  <div className="mt-4 rounded-lg border border-border bg-surface-hover/30 p-4 space-y-4">
-                    <div className="flex items-center justify-between border-b border-border pb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-foreground">Call Session Monitor</span>
-                        <Badge
-                          tone={
-                            testCallRecord.status === 'completed'
-                              ? 'success'
-                              : testCallRecord.status === 'failed'
-                              ? 'danger'
-                              : 'warning'
-                          }
-                        >
-                          {testCallRecord.status}
-                        </Badge>
-                      </div>
-                      <span className="text-xs font-mono text-muted-foreground">
-                        Duration: {formatDuration(testCallRecord.duration)}
-                      </span>
-                    </div>
-
-                    {testCallRecord.recording_url && (
-                      <div>
-                        <span className="text-[11px] font-medium text-muted-foreground block mb-1">
-                          Call Audio Recording:
-                        </span>
-                        <audio
-                          controls
-                          src={testCallRecord.recording_url}
-                          className="w-full h-8 rounded"
-                        />
-                      </div>
-                    )}
-
-                    {testCallRecord.sentiment && (
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="text-muted-foreground">Customer Sentiment:</span>
-                        <span className="font-medium text-foreground capitalize">
-                          {testCallRecord.sentiment}
-                        </span>
-                      </div>
-                    )}
-
-                    {testCallRecord.summary && (
-                      <div>
-                        <span className="text-[11px] font-medium text-muted-foreground block mb-0.5">
-                          AI Executive Summary:
-                        </span>
-                        <p className="text-xs text-foreground bg-surface p-3 rounded border border-border leading-relaxed">
-                          {testCallRecord.summary}
-                        </p>
-                      </div>
-                    )}
-
-                    {testCallRecord.transcript && (
-                      <div>
-                        <span className="text-[11px] font-medium text-muted-foreground block mb-0.5">
-                          Verbatim Transcript:
-                        </span>
-                        <div className="max-h-56 overflow-y-auto whitespace-pre-wrap rounded bg-black/[0.03] dark:bg-white/[0.03] p-3 font-mono text-[11px] text-foreground border border-border leading-relaxed">
-                          {testCallRecord.transcript}
-                        </div>
-                      </div>
-                    )}
-
-                    {testCallRecord.answers && Object.keys(testCallRecord.answers).length > 0 && (
-                      <div>
-                        <span className="text-[11px] font-medium text-muted-foreground block mb-1">
-                          Extracted Deliverables:
-                        </span>
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          {Object.entries(testCallRecord.answers).map(([k, v]) => (
-                            <div key={k} className="rounded bg-surface p-2.5 border border-border text-xs">
-                              <span className="text-muted-foreground font-medium block text-[10px]">{k}</span>
-                              <span className="font-semibold text-foreground">{String(v)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardBody>
-            </Card>
-          </div>
-        )}
-
         {/* Bottom Action Footer */}
         <div className="flex items-center justify-between border-t border-border pt-4">
           <div className="flex items-center gap-2">
@@ -1145,6 +882,17 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
           </Button>
         </div>
       </form>
+
+      {agent?.id && (
+        <TestCallModal
+          open={showTestModal}
+          onClose={() => setShowTestModal(false)}
+          agentId={agent.id}
+          agentName={name || agent.name}
+          systemInstruction={systemInstruction}
+          firstMessage={firstMessage}
+        />
+      )}
     </div>
   );
 }
