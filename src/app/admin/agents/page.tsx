@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { Sparkles, Pencil, Copy } from 'lucide-react';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { AgentFormModal } from '@/components/admin/AgentFormModal';
 import { SyncAgentsModal } from '@/components/admin/SyncAgentsModal';
 import { CopyableAgentId } from '@/components/admin/CopyableAgentId';
 import { formatDateTime } from '@/lib/format';
@@ -36,7 +35,6 @@ export default async function AdminAgentsPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <SyncAgentsModal users={users} />
-          <AgentFormModal users={users} />
           <Link
             href="/admin/agents/new"
             className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
