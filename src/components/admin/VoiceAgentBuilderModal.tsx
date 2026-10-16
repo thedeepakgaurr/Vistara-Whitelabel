@@ -596,7 +596,7 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
                   <Label htmlFor="agent-desc">Description</Label>
                   <Textarea
                     id="agent-desc"
-                    rows={4}
+                    rows={3}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Internal summary of this voice agent's role"
@@ -605,7 +605,7 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
                 </div>
 
                 {/* Column 2: Voice Persona Selection & Primary Language in 2 rows */}
-                <div className="space-y-3.5">
+                <div className="space-y-3">
                   <div>
                     <Label htmlFor="modal-voice">Voice Persona Selection</Label>
                     <Select id="modal-voice" value={voice} onChange={(e) => setVoice(e.target.value)} className="mt-1">
@@ -615,9 +615,6 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
                         </option>
                       ))}
                     </Select>
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      Natural conversational voice persona tailored for telephonic audio.
-                    </p>
                   </div>
 
                   <div>
@@ -629,9 +626,6 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
                         </option>
                       ))}
                     </Select>
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      Native Indian languages & English are optimized for real-time speech.
-                    </p>
                   </div>
                 </div>
               </div>

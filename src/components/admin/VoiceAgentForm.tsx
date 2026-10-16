@@ -675,7 +675,7 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
                     <Label htmlFor="agent-desc">Internal Description (optional)</Label>
                     <Textarea
                       id="agent-desc"
-                      rows={5}
+                      rows={3}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Short description of this voice agent's role and campaign goals"
@@ -684,7 +684,7 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
                   </div>
 
                   {/* Column 2: Voice Persona Selection & Primary Language in 2 rows */}
-                  <div className="space-y-3.5">
+                  <div className="space-y-3">
                     <div>
                       <Label htmlFor="agent-voice">Voice Persona Selection</Label>
                       <Select
@@ -699,9 +699,6 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
                           </option>
                         ))}
                       </Select>
-                      <p className="mt-1 text-[11px] text-muted-foreground">
-                        Natural conversational voice persona tailored for telephonic audio.
-                      </p>
                     </div>
 
                     <div>
@@ -718,9 +715,6 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
                           </option>
                         ))}
                       </Select>
-                      <p className="mt-1 text-[11px] text-muted-foreground">
-                        Agent will adapt its dialect and vocabulary to match your chosen primary language.
-                      </p>
                     </div>
                   </div>
                 </div>
