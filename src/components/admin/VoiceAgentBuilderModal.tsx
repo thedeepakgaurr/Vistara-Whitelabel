@@ -251,10 +251,8 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
   const [description, setDescription] = useState(agent?.description || '');
   const [userId, setUserId] = useState(agent?.user_id || agent?.userId ? String(agent?.user_id || agent?.userId) : '');
   const [language, setLanguage] = useState(agent?.language || 'English');
-  const [callingMethod, setCallingMethod] = useState<CallingMethod>(
-    (agent?.calling_method as CallingMethod) || 'traditional'
-  );
-  const [voice, setVoice] = useState(agent?.voice || (callingMethod === 'gemini_live' ? 'Aoede' : 'meera'));
+  const callingMethod: CallingMethod = 'traditional';
+  const [voice, setVoice] = useState(agent?.voice || 'meera');
   const [status, setStatus] = useState<'active' | 'paused'>((agent?.status as 'active' | 'paused') || 'active');
   const [isActive, setIsActive] = useState<boolean>(agent?.is_active !== undefined ? Boolean(agent.is_active) : true);
 
@@ -288,15 +286,6 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
     sentiment: string | null;
     recording_url: string | null;
   } | null>(null);
-
-  // Reset voice when callingMethod changes
-  function handleCallingMethodChange(newMethod: CallingMethod) {
-    setCallingMethod(newMethod);
-    const validVoices = VISTARA_VOICES[newMethod].map((v) => v.id);
-    if (!validVoices.includes(voice)) {
-      setVoice(newMethod === 'gemini_live' ? 'Aoede' : 'meera');
-    }
-  }
 
   // Load a prompt template
   function applyTemplate(templateKey: string) {
@@ -589,17 +578,16 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
 
               <div className="grid gap-4 sm:grid-cols-2 pt-2 border-t border-border">
                 <div>
-                  <Label htmlFor="calling-method">Voice Engine / Calling Method</Label>
-                  <Select
-                    id="calling-method"
-                    value={callingMethod}
-                    onChange={(e) => handleCallingMethodChange(e.target.value as CallingMethod)}
-                  >
-                    <option value="traditional">Traditional (Meera, Nisha, Siya, Rohan, Dev, Vikram)</option>
-                    <option value="gemini_live">Gemini Live Ultra-low Latency (Aoede, Kore, Puck, etc.)</option>
+                  <Label htmlFor="modal-voice">Voice Persona Selection</Label>
+                  <Select id="modal-voice" value={voice} onChange={(e) => setVoice(e.target.value)}>
+                    {VISTARA_VOICES.traditional.map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {v.label}
+                      </option>
+                    ))}
                   </Select>
                   <p className="mt-1 text-[11px] text-muted-foreground">
-                    Traditional gives reliable telephony accents. Gemini Live delivers ultra-responsive conversational flow.
+                    Natural conversational voice persona tailored for telephonic audio.
                   </p>
                 </div>
 
@@ -615,35 +603,6 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
                   <p className="mt-1 text-[11px] text-muted-foreground">
                     Native Indian languages & English are optimized for real-time speech.
                   </p>
-                </div>
-              </div>
-
-              {/* Voice Catalog Selector */}
-              <div>
-                <Label>Voice Persona Selection</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1.5">
-                  {VISTARA_VOICES[callingMethod].map((v) => {
-                    const isSelected = voice === v.id;
-                    return (
-                      <div
-                        key={v.id}
-                        onClick={() => setVoice(v.id)}
-                        className={`cursor-pointer rounded-lg border p-3 text-left transition-all ${
-                          isSelected
-                            ? 'border-primary bg-primary-soft/50 ring-1 ring-primary'
-                            : 'border-border bg-surface hover:bg-surface-hover'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-xs text-foreground">{v.label.split(' ')[0]}</span>
-                          <span className="text-[10px] uppercase font-mono text-muted-foreground">
-                            {v.gender}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-[11px] text-muted-foreground truncate">{v.label}</p>
-                      </div>
-                    );
-                  })}
                 </div>
               </div>
 

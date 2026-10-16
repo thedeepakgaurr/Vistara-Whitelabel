@@ -261,10 +261,8 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
   const [description, setDescription] = useState(agent?.description || '');
   const [userId, setUserId] = useState(agent?.user_id || agent?.userId ? String(agent?.user_id || agent?.userId) : '');
   const [language, setLanguage] = useState(agent?.language || 'English');
-  const [callingMethod, setCallingMethod] = useState<CallingMethod>(
-    (agent?.calling_method as CallingMethod) || 'traditional'
-  );
-  const [voice, setVoice] = useState(agent?.voice || (callingMethod === 'gemini_live' ? 'Aoede' : 'meera'));
+  const callingMethod: CallingMethod = 'traditional';
+  const [voice, setVoice] = useState(agent?.voice || 'meera');
   const [status, setStatus] = useState<'active' | 'paused'>((agent?.status as 'active' | 'paused') || 'active');
   const [isActive, setIsActive] = useState<boolean>(agent?.is_active !== undefined ? Boolean(agent.is_active) : true);
 
@@ -298,14 +296,6 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
     sentiment: string | null;
     recording_url: string | null;
   } | null>(null);
-
-  function handleCallingMethodChange(newMethod: CallingMethod) {
-    setCallingMethod(newMethod);
-    const validVoices = VISTARA_VOICES[newMethod].map((v) => v.id);
-    if (!validVoices.includes(voice)) {
-      setVoice(newMethod === 'gemini_live' ? 'Aoede' : 'meera');
-    }
-  }
 
   function applyTemplate(templateKey: string) {
     const t = TEMPLATES[templateKey];
@@ -667,25 +657,26 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
 
             <Card>
               <CardHeader>
-                <CardTitle>Voice Engine & Language</CardTitle>
+                <CardTitle>Voice & Language</CardTitle>
               </CardHeader>
               <CardBody className="space-y-5">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <Label htmlFor="calling-method">Voice Engine / Calling Method</Label>
+                    <Label htmlFor="agent-voice">Voice Persona Selection</Label>
                     <Select
-                      id="calling-method"
-                      value={callingMethod}
-                      onChange={(e) => handleCallingMethodChange(e.target.value as CallingMethod)}
+                      id="agent-voice"
+                      value={voice}
+                      onChange={(e) => setVoice(e.target.value)}
                       className="mt-1"
                     >
-                      <option value="traditional">Traditional Telephony Engine (Stable, Indic Accents)</option>
-                      <option value="gemini_live">Gemini Live Native Audio (Real-time Interruptions)</option>
+                      {VISTARA_VOICES.traditional.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.label}
+                        </option>
+                      ))}
                     </Select>
                     <p className="mt-1.5 text-[11px] text-muted-foreground">
-                      {callingMethod === 'traditional'
-                        ? 'Optimized for high-throughput telephonic reliability with authentic Indian English and Hindi pronunciations.'
-                        : 'Ultra-low latency conversational audio streaming directly with Gemini Multimodal Live.'}
+                      Natural conversational voice persona tailored for telephonic audio.
                     </p>
                   </div>
 
@@ -706,39 +697,6 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
                     <p className="mt-1.5 text-[11px] text-muted-foreground">
                       Agent will adapt its dialect and vocabulary to match your chosen primary language.
                     </p>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Voice Persona Selection</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
-                    {VISTARA_VOICES[callingMethod].map((v) => {
-                      const isSelected = voice === v.id;
-                      return (
-                        <div
-                          key={v.id}
-                          onClick={() => setVoice(v.id)}
-                          className={`cursor-pointer rounded-lg border p-3 text-left transition-all relative ${
-                            isSelected
-                              ? 'border-primary bg-primary-soft/40 ring-2 ring-primary/60'
-                              : 'border-border bg-surface hover:bg-surface-hover/80'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold text-xs text-foreground">{v.label.split(' ')[0]}</span>
-                            <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-muted/20 text-muted-foreground">
-                              {v.gender}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-[11px] text-muted-foreground truncate">{v.label}</p>
-                          {isSelected && (
-                            <div className="absolute top-2 right-2">
-                              <CheckCircle2 className="size-3.5 text-primary" />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
                   </div>
                 </div>
 
