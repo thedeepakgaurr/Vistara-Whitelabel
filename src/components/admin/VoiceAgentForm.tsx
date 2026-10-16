@@ -669,62 +669,59 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
                   </div>
                 )}
 
-                <div>
-                  <Label htmlFor="agent-desc">Internal Description (optional)</Label>
-                  <Textarea
-                    id="agent-desc"
-                    rows={2}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Short description of this voice agent's role and campaign goals"
-                    className="mt-1"
-                  />
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Voice & Language</CardTitle>
-              </CardHeader>
-              <CardBody className="space-y-5">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor="agent-voice">Voice Persona Selection</Label>
-                    <Select
-                      id="agent-voice"
-                      value={voice}
-                      onChange={(e) => setVoice(e.target.value)}
-                      className="mt-1"
-                    >
-                      {VISTARA_VOICES.traditional.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.label}
-                        </option>
-                      ))}
-                    </Select>
-                    <p className="mt-1.5 text-[11px] text-muted-foreground">
-                      Natural conversational voice persona tailored for telephonic audio.
-                    </p>
+                <div className="grid gap-4 sm:grid-cols-2 pt-2 border-t border-border">
+                  {/* Column 1: Internal Description */}
+                  <div className="flex flex-col">
+                    <Label htmlFor="agent-desc">Internal Description (optional)</Label>
+                    <Textarea
+                      id="agent-desc"
+                      rows={5}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Short description of this voice agent's role and campaign goals"
+                      className="mt-1 flex-1 resize-y"
+                    />
                   </div>
 
-                  <div>
-                    <Label htmlFor="agent-lang">Primary Language</Label>
-                    <Select
-                      id="agent-lang"
-                      value={language}
-                      onChange={(e) => setLanguage(e.target.value)}
-                      className="mt-1"
-                    >
-                      {LANGUAGES.map((l) => (
-                        <option key={l} value={l}>
-                          {l}
-                        </option>
-                      ))}
-                    </Select>
-                    <p className="mt-1.5 text-[11px] text-muted-foreground">
-                      Agent will adapt its dialect and vocabulary to match your chosen primary language.
-                    </p>
+                  {/* Column 2: Voice Persona Selection & Primary Language in 2 rows */}
+                  <div className="space-y-3.5">
+                    <div>
+                      <Label htmlFor="agent-voice">Voice Persona Selection</Label>
+                      <Select
+                        id="agent-voice"
+                        value={voice}
+                        onChange={(e) => setVoice(e.target.value)}
+                        className="mt-1"
+                      >
+                        {VISTARA_VOICES.traditional.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.label}
+                          </option>
+                        ))}
+                      </Select>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        Natural conversational voice persona tailored for telephonic audio.
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="agent-lang">Primary Language</Label>
+                      <Select
+                        id="agent-lang"
+                        value={language}
+                        onChange={(e) => setLanguage(e.target.value)}
+                        className="mt-1"
+                      >
+                        {LANGUAGES.map((l) => (
+                          <option key={l} value={l}>
+                            {l}
+                          </option>
+                        ))}
+                      </Select>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        Agent will adapt its dialect and vocabulary to match your chosen primary language.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </CardBody>

@@ -590,43 +590,49 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
                 </label>
               )}
 
-              <div>
-                <Label htmlFor="agent-desc">Description</Label>
-                <Input
-                  id="agent-desc"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Internal summary of this voice agent's role"
-                />
-              </div>
-
               <div className="grid gap-4 sm:grid-cols-2 pt-2 border-t border-border">
-                <div>
-                  <Label htmlFor="modal-voice">Voice Persona Selection</Label>
-                  <Select id="modal-voice" value={voice} onChange={(e) => setVoice(e.target.value)}>
-                    {VISTARA_VOICES.traditional.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.label}
-                      </option>
-                    ))}
-                  </Select>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    Natural conversational voice persona tailored for telephonic audio.
-                  </p>
+                {/* Column 1: Description */}
+                <div className="flex flex-col">
+                  <Label htmlFor="agent-desc">Description</Label>
+                  <Textarea
+                    id="agent-desc"
+                    rows={4}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Internal summary of this voice agent's role"
+                    className="mt-1 flex-1 resize-y"
+                  />
                 </div>
 
-                <div>
-                  <Label htmlFor="language">Primary Language</Label>
-                  <Select id="language" value={language} onChange={(e) => setLanguage(e.target.value)}>
-                    {LANGUAGES.map((lang) => (
-                      <option key={lang} value={lang}>
-                        {lang}
-                      </option>
-                    ))}
-                  </Select>
-                  <p className="mt-1 text-[11px] text-muted-foreground">
-                    Native Indian languages & English are optimized for real-time speech.
-                  </p>
+                {/* Column 2: Voice Persona Selection & Primary Language in 2 rows */}
+                <div className="space-y-3.5">
+                  <div>
+                    <Label htmlFor="modal-voice">Voice Persona Selection</Label>
+                    <Select id="modal-voice" value={voice} onChange={(e) => setVoice(e.target.value)} className="mt-1">
+                      {VISTARA_VOICES.traditional.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.label}
+                        </option>
+                      ))}
+                    </Select>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Natural conversational voice persona tailored for telephonic audio.
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="language">Primary Language</Label>
+                    <Select id="language" value={language} onChange={(e) => setLanguage(e.target.value)} className="mt-1">
+                      {LANGUAGES.map((lang) => (
+                        <option key={lang} value={lang}>
+                          {lang}
+                        </option>
+                      ))}
+                    </Select>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      Native Indian languages & English are optimized for real-time speech.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
