@@ -55,7 +55,7 @@ export default async function AdminAgentsPage() {
               <thead>
                 <tr className="border-b border-border bg-surface-hover/40 text-xs font-medium text-muted-foreground">
                   <th className="px-4 py-2.5 whitespace-nowrap">Agent</th>
-                  <th className="px-4 py-2.5 whitespace-nowrap">Engine & Voice</th>
+                  <th className="px-4 py-2.5 whitespace-nowrap">Voice & Language</th>
                   <th className="px-4 py-2.5 whitespace-nowrap">Assigned To</th>
                   <th className="px-4 py-2.5 whitespace-nowrap">Status</th>
                   <th className="px-4 py-2.5 whitespace-nowrap">Created</th>
@@ -87,9 +87,6 @@ export default async function AdminAgentsPage() {
                       <div className="flex items-center gap-1.5">
                         <Badge tone="neutral" className="capitalize">
                           {a.voice || 'meera'}
-                        </Badge>
-                        <Badge tone={a.calling_method === 'gemini_live' ? 'info' : 'neutral'} className="text-[10px]">
-                          {a.calling_method === 'gemini_live' ? 'Gemini Live' : 'Traditional'}
                         </Badge>
                         <span className="text-[11px] text-muted-foreground">({a.language || 'English'})</span>
                       </div>

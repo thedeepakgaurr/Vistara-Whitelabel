@@ -54,9 +54,6 @@ export default async function DashboardAgentsPage() {
                 <span>•</span>
                 <span>{a.language || 'English'}</span>
               </div>
-              <Badge tone="neutral" className="text-[10px]">
-                {a.calling_method === 'gemini_live' ? 'Gemini Live' : 'Standard'}
-              </Badge>
             </div>
           </Card>
         ))}
