@@ -15,6 +15,7 @@ import {
   AlertCircle,
   ArrowLeft,
   Save,
+  Copy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -32,8 +33,8 @@ export interface UserOption {
 }
 
 export interface AgentData {
-  id: number;
-  vistara_agent_id: string;
+  id?: number;
+  vistara_agent_id?: string;
   name: string;
   description: string | null;
   userId?: number | null;
@@ -249,7 +250,7 @@ interface VoiceAgentFormProps {
 export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
   const router = useRouter();
   const toast = useToast();
-  const isEdit = Boolean(agent);
+  const isEdit = Boolean(agent && agent.id);
 
   const [activeTab, setActiveTab] = useState<'persona' | 'prompt' | 'deliverables' | 'test'>('persona');
   const [loading, setLoading] = useState(false);
@@ -489,11 +490,18 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
                 {status}
               </Badge>
             )}
+            {!isEdit && agent && (
+              <Badge tone="primary" className="capitalize">
+                Duplicated Template
+              </Badge>
+            )}
           </div>
           <div className="mt-1 flex items-center gap-2">
             <p className="text-xs text-muted-foreground">
               {isEdit
                 ? 'Configure persona instructions, speech engine, deliverables, and test live calls.'
+                : agent
+                ? `Duplicating configuration from "${agent.name}". Review details and assign an account.`
                 : 'Build, configure, and publish an AI voice agent ready for outbound campaigns.'}
             </p>
             {isEdit && agent?.vistara_agent_id && (
@@ -503,6 +511,19 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
         </div>
 
         <div className="flex items-center gap-2">
+          {isEdit && agent?.id && (
+            <Link href={`/admin/agents/new?duplicate=${agent.id}`}>
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                className="text-foreground hover:bg-surface-hover hover:border-primary/40 transition-colors"
+              >
+                <Copy className="size-3.5 mr-1" />
+                Duplicate
+              </Button>
+            </Link>
+          )}
           {isEdit && agent?.id && (
             <Button
               variant="outline"
@@ -1085,6 +1106,19 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
                 Back to Agents
               </Button>
             </Link>
+            {isEdit && agent?.id && (
+              <Link href={`/admin/agents/new?duplicate=${agent.id}`}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-foreground hover:bg-surface-hover hover:border-primary/40 transition-colors"
+                >
+                  <Copy className="size-3.5 mr-1" />
+                  Duplicate
+                </Button>
+              </Link>
+            )}
             {isEdit && agent?.id && (
               <Button
                 type="button"

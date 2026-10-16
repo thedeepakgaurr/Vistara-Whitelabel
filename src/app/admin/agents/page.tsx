@@ -1,12 +1,11 @@
 import { pool } from '@/lib/db';
 import Link from 'next/link';
-import { Sparkles, Pencil } from 'lucide-react';
+import { Sparkles, Pencil, Copy } from 'lucide-react';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { AgentFormModal } from '@/components/admin/AgentFormModal';
 import { SyncAgentsModal } from '@/components/admin/SyncAgentsModal';
 import { CopyableAgentId } from '@/components/admin/CopyableAgentId';
-import { DeleteAgentButton } from '@/components/admin/DeleteAgentButton';
 import { formatDateTime } from '@/lib/format';
 import type { AgentRow } from '@/types';
 
@@ -132,7 +131,14 @@ export default async function AdminAgentsPage() {
                         >
                           <Pencil className="size-3.5" />
                         </Link>
-                        <DeleteAgentButton agentId={a.id} agentName={a.name} showText={false} />
+                        <Link
+                          href={`/admin/agents/new?duplicate=${a.id}`}
+                          title={`Duplicate agent "${a.name}"`}
+                          aria-label={`Duplicate agent "${a.name}"`}
+                          className="inline-flex size-7 items-center justify-center rounded-md border border-border bg-surface text-muted-foreground hover:bg-surface-hover hover:text-foreground hover:border-primary/40 transition-colors"
+                        >
+                          <Copy className="size-3.5" />
+                        </Link>
                       </div>
                     </td>
                   </tr>
