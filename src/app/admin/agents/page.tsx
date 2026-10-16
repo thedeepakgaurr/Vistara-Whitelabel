@@ -5,6 +5,7 @@ import { Card, CardBody } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { SyncAgentsModal } from '@/components/admin/SyncAgentsModal';
 import { CopyableAgentId } from '@/components/admin/CopyableAgentId';
+import { AgentTestCallButton } from '@/components/admin/AgentTestCallButton';
 import { formatDateTime } from '@/lib/format';
 import type { AgentRow } from '@/types';
 
@@ -121,6 +122,12 @@ export default async function AdminAgentsPage() {
 
                     <td className="px-4 py-2.5 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
+                        <AgentTestCallButton
+                          agentId={a.id}
+                          agentName={a.name}
+                          systemInstruction={a.system_instruction}
+                          firstMessage={a.first_message}
+                        />
                         <Link
                           href={`/admin/agents/${a.id}`}
                           title={`Edit agent "${a.name}"`}
