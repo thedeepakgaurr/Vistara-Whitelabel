@@ -80,19 +80,13 @@ export function TestCallModal({
   // Extract variables from prompt/first_message for quick-add suggestions
   const detectedVariables = extractTemplateVariables(systemInstruction, firstMessage);
 
-  // Reset or initialize on open
+  // Reset state when modal closes
   useEffect(() => {
-    if (open) {
-      // Pre-seed detected variables if not already added
-      if (customVariables.length === 0 && detectedVariables.length > 0) {
-        setCustomVariables(
-          detectedVariables.map((v, i) => ({
-            id: `seed_${i}_${v}`,
-            key: v,
-            value: '',
-          }))
-        );
-      }
+    if (!open) {
+      setTestCallId(null);
+      setTestCallRecord(null);
+      setTestCalling(false);
+      setCustomVariables([]);
     }
   }, [open]);
 
@@ -307,7 +301,7 @@ export function TestCallModal({
           )}
 
           {/* Custom Variables List */}
-          {customVariables.length > 0 ? (
+          {customVariables.length > 0 && (
             <div className="space-y-2 pt-1">
               {customVariables.map((v) => (
                 <div key={v.id} className="flex items-center gap-2">
@@ -341,9 +335,11 @@ export function TestCallModal({
                 </div>
               ))}
             </div>
-          ) : (
-            <p className="text-[11px] text-muted-foreground/80 italic py-1">
-              No custom values added. Click &quot;Add Custom Value&quot; to test prompt variables like company, property, loan amount, etc.
+          )}
+
+          {customVariables.length === 0 && (
+            <p className="text-[11px] text-muted-foreground/70 italic py-0.5">
+              No custom values added. Only needed if your prompt depends on dynamic variables.
             </p>
           )}
         </div>
