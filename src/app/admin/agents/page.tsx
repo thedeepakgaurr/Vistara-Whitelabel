@@ -1,6 +1,6 @@
 import { pool } from '@/lib/db';
 import Link from 'next/link';
-import { Sparkles, Sliders } from 'lucide-react';
+import { Sparkles, Pencil } from 'lucide-react';
 import { Card, CardBody } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { AgentFormModal } from '@/components/admin/AgentFormModal';
@@ -129,12 +129,13 @@ export default async function AdminAgentsPage() {
                       <div className="flex items-center justify-end gap-1.5">
                         <Link
                           href={`/admin/agents/${a.id}`}
-                          className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2.5 py-1 text-xs font-medium text-foreground hover:bg-surface-hover hover:border-primary/40 transition-colors"
+                          title={`Edit agent "${a.name}"`}
+                          aria-label={`Edit agent "${a.name}"`}
+                          className="inline-flex size-7 items-center justify-center rounded-md border border-border bg-surface text-muted-foreground hover:bg-surface-hover hover:text-foreground hover:border-primary/40 transition-colors"
                         >
-                          <Sliders className="size-3" />
-                          Edit & Test
+                          <Pencil className="size-3.5" />
                         </Link>
-                        <DeleteAgentButton agentId={a.id} agentName={a.name} />
+                        <DeleteAgentButton agentId={a.id} agentName={a.name} showText={false} />
                       </div>
                     </td>
                   </tr>

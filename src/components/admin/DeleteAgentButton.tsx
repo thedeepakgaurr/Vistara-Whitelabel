@@ -11,7 +11,7 @@ interface DeleteAgentButtonProps {
   showText?: boolean;
 }
 
-export function DeleteAgentButton({ agentId, agentName, showText = true }: DeleteAgentButtonProps) {
+export function DeleteAgentButton({ agentId, agentName, showText = false }: DeleteAgentButtonProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const toast = useToast();
@@ -52,9 +52,14 @@ export function DeleteAgentButton({ agentId, agentName, showText = true }: Delet
       onClick={handleDelete}
       disabled={loading}
       title={`Delete agent "${agentName}"`}
-      className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-danger-soft hover:text-danger hover:border-danger/30 transition-colors disabled:opacity-50"
+      aria-label={`Delete agent "${agentName}"`}
+      className={
+        showText
+          ? 'inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-danger-soft hover:text-danger hover:border-danger/30 transition-colors disabled:opacity-50'
+          : 'inline-flex size-7 items-center justify-center rounded-md border border-border bg-surface text-muted-foreground hover:bg-danger-soft hover:text-danger hover:border-danger/30 transition-colors disabled:opacity-50'
+      }
     >
-      <Trash2 className={`size-3 ${loading ? 'animate-pulse text-danger' : ''}`} />
+      <Trash2 className={`size-3.5 ${loading ? 'animate-pulse text-danger' : ''}`} />
       {showText && <span>{loading ? 'Deleting...' : 'Delete'}</span>}
     </button>
   );
