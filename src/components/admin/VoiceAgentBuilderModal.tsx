@@ -254,7 +254,6 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
   const callingMethod: CallingMethod = 'traditional';
   const [voice, setVoice] = useState(agent?.voice || 'meera');
   const [status, setStatus] = useState<'active' | 'paused'>((agent?.status as 'active' | 'paused') || 'active');
-  const [isActive, setIsActive] = useState<boolean>(agent?.is_active !== undefined ? Boolean(agent.is_active) : true);
 
   const [firstMessage, setFirstMessage] = useState(agent?.first_message || '');
   const [systemInstruction, setSystemInstruction] = useState(agent?.system_instruction || '');
@@ -333,7 +332,6 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
         system_instruction: systemInstruction || undefined,
         deliverables: deliverables.length > 0 ? deliverables : undefined,
         status,
-        ...(isEdit ? { isActive } : {}),
       };
 
       const url = isEdit ? `/api/admin/agents/${agent!.id}` : '/api/admin/agents';
@@ -578,17 +576,6 @@ export function VoiceAgentBuilderModal({ users, agent, trigger }: Props) {
                 </div>
               </div>
 
-              {isEdit && (
-                <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isActive}
-                    onChange={(e) => setIsActive(e.target.checked)}
-                    className="size-4 rounded border-border text-primary focus:ring-primary/30"
-                  />
-                  Available in Client Dashboard
-                </label>
-              )}
 
               <div className="grid gap-4 sm:grid-cols-2 pt-2 border-t border-border">
                 {/* Column 1: Description */}

@@ -35,7 +35,7 @@ async function claimQueuedCalls(limit: number): Promise<ClaimedCall[]> {
        LEFT JOIN campaigns camp ON camp.id = c.campaign_id
        WHERE c.status = 'queued'
          AND u.is_active = 1
-         AND a.is_active = 1
+         AND (a.status = 'active' OR (a.status IS NULL AND a.is_active = 1))
          AND (camp.id IS NULL OR camp.status != 'paused')
          AND u.wallet_balance >= u.rate_per_connected_minute
        ORDER BY c.created_at ASC

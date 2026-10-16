@@ -65,13 +65,16 @@ export const PATCH = withApiErrors(async (request: Request, { params }: { params
     fields.push('user_id = ?');
     values.push(body.userId);
   }
-  if (body.isActive !== undefined) {
-    fields.push('is_active = ?');
-    values.push(body.isActive ? 1 : 0);
-  }
   if (body.status !== undefined) {
     fields.push('status = ?');
     values.push(body.status);
+    fields.push('is_active = ?');
+    values.push(body.status === 'active' ? 1 : 0);
+  } else if (body.isActive !== undefined) {
+    fields.push('is_active = ?');
+    values.push(body.isActive ? 1 : 0);
+    fields.push('status = ?');
+    values.push(body.isActive ? 'active' : 'paused');
   }
   if (body.language !== undefined) {
     fields.push('language = ?');

@@ -264,7 +264,6 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
   const callingMethod: CallingMethod = 'traditional';
   const [voice, setVoice] = useState(agent?.voice || 'meera');
   const [status, setStatus] = useState<'active' | 'paused'>((agent?.status as 'active' | 'paused') || 'active');
-  const [isActive, setIsActive] = useState<boolean>(agent?.is_active !== undefined ? Boolean(agent.is_active) : true);
 
   const [firstMessage, setFirstMessage] = useState(agent?.first_message || '');
   const [systemInstruction, setSystemInstruction] = useState(agent?.system_instruction || '');
@@ -340,7 +339,6 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
         system_instruction: systemInstruction || undefined,
         deliverables: deliverables.length > 0 ? deliverables : undefined,
         status,
-        ...(isEdit ? { isActive } : {}),
       };
 
       const url = isEdit ? `/api/admin/agents/${agent!.id}` : '/api/admin/agents';
@@ -487,7 +485,7 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
               {isEdit ? `Edit Agent: ${agent?.name}` : 'Create Voice Agent'}
             </h1>
             {isEdit && (
-              <Badge tone={isActive ? 'success' : 'neutral'} className="capitalize">
+              <Badge tone={status === 'active' ? 'success' : 'neutral'} className="capitalize">
                 {status}
               </Badge>
             )}
@@ -654,20 +652,6 @@ export function VoiceAgentForm({ users, agent }: VoiceAgentFormProps) {
                   </div>
                 </div>
 
-                {isEdit && (
-                  <div className="flex items-center gap-2 pt-1">
-                    <input
-                      type="checkbox"
-                      id="is-active"
-                      checked={isActive}
-                      onChange={(e) => setIsActive(e.target.checked)}
-                      className="rounded border-border text-primary focus:ring-primary size-4"
-                    />
-                    <label htmlFor="is-active" className="text-xs text-foreground font-medium cursor-pointer">
-                      Enabled for Outbound Campaigns
-                    </label>
-                  </div>
-                )}
 
                 <div className="grid gap-4 sm:grid-cols-2 pt-2 border-t border-border">
                   {/* Column 1: Internal Description */}

@@ -35,7 +35,7 @@ export default async function DashboardAgentsPage() {
                     <span className="font-mono text-[10px] text-muted-foreground">ID #{a.id}</span>
                   </div>
                 </div>
-                <Badge tone={a.is_active ? 'success' : 'neutral'}>{a.is_active ? 'Active' : 'Inactive'}</Badge>
+                <Badge tone={a.status === 'active' ? 'success' : 'neutral'}>{a.status === 'paused' ? 'Paused' : 'Active'}</Badge>
               </div>
 
               {a.description && <p className="mt-3 text-xs text-muted-foreground line-clamp-2">{a.description}</p>}

@@ -13,7 +13,7 @@ export const POST = withApiErrors(async (request: Request) => {
   const body = createCampaignSchema.parse(await request.json());
 
   const [agentRows] = await pool.query(
-    'SELECT * FROM agents WHERE id = ? AND user_id = ? AND is_active = 1 LIMIT 1',
+    'SELECT * FROM agents WHERE id = ? AND user_id = ? AND (status = \'active\' OR (status IS NULL AND is_active = 1)) LIMIT 1',
     [body.agentId, user.id]
   );
   const agent = (agentRows as AgentRow[])[0];

@@ -86,7 +86,7 @@ export const POST = withApiErrors(async (request: Request) => {
   const [result] = await pool.query(
     `INSERT INTO agents 
       (vistara_agent_id, user_id, name, description, language, calling_method, voice, first_message, system_instruction, deliverables, status, is_active) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       vistaraAgentId,
       body.userId ?? null,
@@ -99,6 +99,7 @@ export const POST = withApiErrors(async (request: Request) => {
       systemInstruction,
       deliverables.length > 0 ? JSON.stringify(deliverables) : null,
       status,
+      status === 'active' ? 1 : 0,
     ]
   );
 

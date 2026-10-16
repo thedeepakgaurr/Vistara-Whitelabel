@@ -113,8 +113,8 @@ export default async function AdminAgentsPage() {
                     </td>
 
                     <td className="px-4 py-2.5 whitespace-nowrap">
-                      <Badge tone={a.is_active ? 'success' : 'neutral'}>
-                        {a.status === 'paused' ? 'Paused' : a.is_active ? 'Active' : 'Inactive'}
+                      <Badge tone={a.status === 'active' ? 'success' : 'neutral'}>
+                        {a.status === 'paused' ? 'Paused' : 'Active'}
                       </Badge>
                     </td>
 

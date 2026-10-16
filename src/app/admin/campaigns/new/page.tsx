@@ -21,7 +21,7 @@ export default async function AdminNewCampaignPage({
   const users = userRows as Pick<UserRow, 'id' | 'name' | 'email' | 'wallet_balance'>[];
 
   const [agentRows] = await pool.query(
-    'SELECT id, name, user_id FROM agents WHERE is_active = 1 ORDER BY name ASC'
+    'SELECT id, name, user_id FROM agents WHERE (status = \'active\' OR (status IS NULL AND is_active = 1)) ORDER BY name ASC'
   );
   const agents = agentRows as Pick<AgentRow, 'id' | 'name' | 'user_id'>[];
 

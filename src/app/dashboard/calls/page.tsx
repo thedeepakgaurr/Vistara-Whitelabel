@@ -21,7 +21,7 @@ async function getData(userId: number, status?: string) {
     values
   );
   const [agents] = await pool.query(
-    'SELECT id, name FROM agents WHERE user_id = ? AND is_active = 1 ORDER BY name ASC',
+    'SELECT id, name FROM agents WHERE user_id = ? AND (status = \'active\' OR (status IS NULL AND is_active = 1)) ORDER BY name ASC',
     [userId]
   );
 
