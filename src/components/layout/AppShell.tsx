@@ -75,12 +75,12 @@ export function AppShell({
 
   const nav = (
     <>
-      <div className="flex h-14 items-center gap-2 px-4">
+      <div className="flex h-14 shrink-0 items-center gap-2 px-4">
         <img src="/logo.svg" alt={brandName} className="size-7 rounded-lg object-contain" />
         <span className="text-sm font-semibold tracking-tight text-foreground">{brandName}</span>
       </div>
 
-      <nav className="flex-1 space-y-0.5 px-2.5 py-2">
+      <nav className="flex-1 space-y-0.5 overflow-y-auto px-2.5 py-2">
         {navItems.map((item) => {
           const active = isActive(item.href);
           return (
@@ -102,7 +102,7 @@ export function AppShell({
         })}
       </nav>
 
-      <div className="border-t border-border p-3">
+      <div className="shrink-0 border-t border-border p-3">
         <div className="flex items-center gap-2.5 rounded-lg px-1.5 py-1.5">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary-hover">
             {initials || 'U'}
@@ -126,7 +126,9 @@ export function AppShell({
   return (
     <div className="flex min-h-screen bg-background">
       {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-surface md:flex">{nav}</aside>
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-surface md:flex">
+        {nav}
+      </aside>
 
       {/* Mobile sidebar */}
       {mobileOpen && (
