@@ -1,5 +1,6 @@
 import type { PoolConnection } from 'mysql2/promise';
 import { withTransaction } from './db';
+import { dispatchCallOutcomeWebhook } from './webhook-dispatcher';
 import type { CallRow, UserRow } from '@/types';
 
 const UNCONNECTED_STATUSES = new Set(['busy', 'no-answer', 'failed', 'canceled']);
@@ -43,7 +44,14 @@ export interface WebhookOutcome {
  * "queued/initiated" stage is left alone (transcript fields still refreshed).
  */
 export async function applyCallWebhookOutcome(vistaraCallId: string, outcome: WebhookOutcome) {
-  return withTransaction(async (conn) => {
+  let webhookJob: {
+    callId: number;
+    campaignId: number;
+    webhookUrl: string;
+    payload: Record<string, unknown>;
+  } | null = null;
+
+  const result = await withTransaction(async (conn) => {
     const [callRows] = await conn.query(
       'SELECT * FROM calls WHERE vistara_call_id = ? LIMIT 1 FOR UPDATE',
       [vistaraCallId]
@@ -108,16 +116,68 @@ export async function applyCallWebhookOutcome(vistaraCallId: string, outcome: We
         [connected ? 1 : 0, cost, call.campaign_id]
       );
       const [[progress]] = (await conn.query(
-        'SELECT total_contacts, completed_calls FROM campaigns WHERE id = ? LIMIT 1',
+        'SELECT total_contacts, completed_calls, type, webhook_url FROM campaigns WHERE id = ? LIMIT 1',
         [call.campaign_id]
-      )) as [{ total_contacts: number; completed_calls: number }[], unknown];
-      if (progress && progress.completed_calls >= progress.total_contacts) {
-        await conn.query("UPDATE campaigns SET status = 'completed' WHERE id = ?", [call.campaign_id]);
+      )) as [{ total_contacts: number; completed_calls: number; type?: string; webhook_url?: string | null }[], unknown];
+      if (progress) {
+        if (progress.type !== 'api' && progress.completed_calls >= progress.total_contacts) {
+          await conn.query("UPDATE campaigns SET status = 'completed' WHERE id = ?", [call.campaign_id]);
+        }
+
+        if (progress.webhook_url) {
+          let parsedAnswers = outcome.answers;
+          if (parsedAnswers === undefined && call.answers) {
+            try {
+              parsedAnswers = typeof call.answers === 'string' ? JSON.parse(call.answers) : call.answers;
+            } catch {
+              parsedAnswers = call.answers;
+            }
+          }
+          let parsedMetadata: unknown = {};
+          if (call.metadata) {
+            try {
+              parsedMetadata = typeof call.metadata === 'string' ? JSON.parse(call.metadata) : call.metadata;
+            } catch {
+              parsedMetadata = call.metadata;
+            }
+          }
+
+          webhookJob = {
+            callId: call.id,
+            campaignId: call.campaign_id,
+            webhookUrl: progress.webhook_url,
+            payload: {
+              event: 'call.completed',
+              call_id: call.id,
+              campaign_id: call.campaign_id,
+              phone: call.phone,
+              name: call.name || null,
+              status: outcome.status,
+              duration: outcome.duration,
+              cost: cost.toFixed(2),
+              sentiment: outcome.sentiment ?? null,
+              summary: outcome.summary ?? null,
+              transcript: outcome.transcript ?? null,
+              answers: parsedAnswers ?? {},
+              recording_url: outcome.recordingUrl ?? null,
+              metadata: parsedMetadata,
+              created_at: call.created_at,
+              completed_at: new Date().toISOString(),
+            },
+          };
+        }
       }
     }
 
     return { matched: true as const, billed: true as const, callId: call.id, cost, connected };
   });
+
+  if (webhookJob) {
+    const job = webhookJob as { callId: number; campaignId: number; webhookUrl: string; payload: Record<string, unknown> };
+    dispatchCallOutcomeWebhook(job.callId, job.campaignId, job.webhookUrl, job.payload);
+  }
+
+  return result;
 }
 
 export async function debitWallet(

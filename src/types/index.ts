@@ -40,6 +40,8 @@ export interface CampaignRow {
   user_id: number;
   agent_id: number;
   name: string;
+  type?: 'csv' | 'api';
+  webhook_url?: string | null;
   status: string;
   total_contacts: number;
   completed_calls: number;
@@ -69,8 +71,21 @@ export interface CallRow {
   reschedule_at: string | null;
   error_message: string | null;
   source: string;
+  idempotency_key?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface WebhookDeliveryLogRow {
+  id: number;
+  call_id: number;
+  campaign_id: number;
+  webhook_url: string;
+  attempt: number;
+  status_code: number | null;
+  delivered: number;
+  error_message: string | null;
+  attempted_at: string;
 }
 
 export interface WalletTransactionRow {

@@ -18,12 +18,13 @@ import { StatCard } from '@/components/ui/StatCard';
 import { CampaignStatusBadge } from '@/components/ui/Badge';
 import { CampaignProgressBar } from '@/components/dashboard/CampaignProgressBar';
 import { CampaignCallsTable } from '@/components/dashboard/CampaignCallsTable';
+import { CampaignApiIntegrationBox } from '@/components/campaigns/CampaignApiIntegrationBox';
 import { formatCurrency, formatDateTime, formatDuration } from '@/lib/format';
-import type { CallRow, CampaignRow } from '@/types';
+import type { CallRow, CampaignRow, WebhookDeliveryLogRow } from '@/types';
 
 async function getAdminCampaign(id: string) {
   const [rows] = await pool.query(
-    `SELECT c.*, a.name as agent_name, a.vistara_agent_id, u.id as user_id, u.name as user_name, u.email as user_email
+    `SELECT c.*, a.name as agent_name, a.vistara_agent_id, u.id as user_id, u.name as user_name, u.email as user_email, u.api_key as user_api_key
      FROM campaigns c
      JOIN agents a ON a.id = c.agent_id
      JOIN users u ON u.id = c.user_id
@@ -36,6 +37,7 @@ async function getAdminCampaign(id: string) {
     user_id: number;
     user_name: string;
     user_email: string;
+    user_api_key: string;
   })[])[0];
   if (!campaign) return null;
 
@@ -47,9 +49,21 @@ async function getAdminCampaign(id: string) {
     [id]
   );
 
+  let deliveryLogs: WebhookDeliveryLogRow[] = [];
+  try {
+    const [logRows] = await pool.query(
+      'SELECT * FROM webhook_delivery_logs WHERE campaign_id = ? ORDER BY attempted_at DESC LIMIT 10',
+      [id]
+    );
+    deliveryLogs = logRows as WebhookDeliveryLogRow[];
+  } catch {
+    deliveryLogs = [];
+  }
+
   return {
     campaign,
     calls: calls as (CallRow & { agent_name: string })[],
+    deliveryLogs,
   };
 }
 
@@ -58,7 +72,7 @@ export default async function AdminCampaignDetailPage({ params }: PageProps<'/ad
   const result = await getAdminCampaign(id);
   if (!result) notFound();
 
-  const { campaign, calls } = result;
+  const { campaign, calls, deliveryLogs } = result;
 
   // Calculated metrics
   const totalCalls = campaign.total_contacts;
@@ -97,6 +111,15 @@ export default async function AdminCampaignDetailPage({ params }: PageProps<'/ad
                 {campaign.name}
               </h1>
               <CampaignStatusBadge status={campaign.status} />
+              {campaign.type === 'api' ? (
+                <span className="inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                  API Campaign
+                </span>
+              ) : (
+                <span className="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground border border-border">
+                  CSV Campaign
+                </span>
+              )}
               <span className="rounded-md border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground">
                 ID #{campaign.id}
               </span>
@@ -123,6 +146,16 @@ export default async function AdminCampaignDetailPage({ params }: PageProps<'/ad
           </div>
         </div>
       </div>
+
+      {/* API Integration Box for API campaigns */}
+      {campaign.type === 'api' && (
+        <CampaignApiIntegrationBox
+          campaignId={campaign.id}
+          webhookUrl={campaign.webhook_url}
+          deliveryLogs={deliveryLogs}
+          apiKeyPlaceholder={campaign.user_api_key || 'USER_API_KEY'}
+        />
+      )}
 
       {/* Progress Bar */}
       <CampaignProgressBar

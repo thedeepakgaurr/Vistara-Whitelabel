@@ -83,18 +83,32 @@ const contactSchema = z.object({
   metadata: z.record(z.string(), z.string()).optional(),
 });
 
-export const createCampaignSchema = z.object({
-  name: z.string().trim().min(1, 'Campaign name is required').max(255),
-  agentId: z.coerce.number().int().positive('Select an agent'),
-  contacts: z.array(contactSchema).min(1, 'Add at least one contact'),
-});
+export const createCampaignSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Campaign name is required').max(255),
+    agentId: z.coerce.number().int().positive('Select an agent'),
+    type: z.enum(['csv', 'api']).default('csv'),
+    webhookUrl: z.string().url('Must be a valid URL starting with http:// or https://').max(1000).optional().or(z.literal('')),
+    contacts: z.array(contactSchema).optional().default([]),
+  })
+  .refine((data) => data.type === 'api' || data.contacts.length > 0, {
+    message: 'Add at least one contact for CSV campaign',
+    path: ['contacts'],
+  });
 
-export const adminCreateCampaignSchema = z.object({
-  userId: z.coerce.number().int().positive('Select a user'),
-  agentId: z.coerce.number().int().positive('Select an agent'),
-  name: z.string().trim().min(1, 'Campaign name is required').max(255),
-  contacts: z.array(contactSchema).min(1, 'Add at least one contact'),
-});
+export const adminCreateCampaignSchema = z
+  .object({
+    userId: z.coerce.number().int().positive('Select a user'),
+    agentId: z.coerce.number().int().positive('Select an agent'),
+    name: z.string().trim().min(1, 'Campaign name is required').max(255),
+    type: z.enum(['csv', 'api']).default('csv'),
+    webhookUrl: z.string().url('Must be a valid URL starting with http:// or https://').max(1000).optional().or(z.literal('')),
+    contacts: z.array(contactSchema).optional().default([]),
+  })
+  .refine((data) => data.type === 'api' || data.contacts.length > 0, {
+    message: 'Add at least one contact for CSV campaign',
+    path: ['contacts'],
+  });
 
 export const createAdhocCallSchema = z.object({
   agentId: z.coerce.number().int().positive('Select an agent'),
@@ -102,9 +116,15 @@ export const createAdhocCallSchema = z.object({
   name: z.string().trim().max(255).optional(),
 });
 
-export const publicInitiateCallSchema = z.object({
-  agentId: z.coerce.number().int().positive('agentId is required'),
-  phone: z.string().trim().min(5).max(20),
-  name: z.string().trim().max(255).optional(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-});
+export const publicInitiateCallSchema = z
+  .object({
+    campaignId: z.coerce.number().int().positive().optional(),
+    agentId: z.coerce.number().int().positive().optional(),
+    phone: z.string().trim().min(5).max(20),
+    name: z.string().trim().max(255).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+  })
+  .refine((data) => Boolean(data.campaignId || data.agentId), {
+    message: 'Either campaignId or agentId must be provided',
+    path: ['campaignId'],
+  });

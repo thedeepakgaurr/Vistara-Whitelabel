@@ -52,9 +52,20 @@ export default async function CampaignsPage() {
                 {campaigns.map((c) => (
                   <tr key={c.id} className="border-b border-border last:border-0 hover:bg-surface-hover">
                     <td className="px-5 py-2.5">
-                      <Link href={`/dashboard/campaigns/${c.id}`} className="font-medium text-foreground hover:text-primary">
-                        {c.name}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/dashboard/campaigns/${c.id}`} className="font-medium text-foreground hover:text-primary">
+                          {c.name}
+                        </Link>
+                        {c.type === 'api' ? (
+                          <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                            API
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-muted text-muted-foreground border border-border">
+                            CSV
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-2.5 text-muted-foreground">{c.agent_name}</td>
                     <td className="px-5 py-2.5">

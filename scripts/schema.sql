@@ -52,6 +52,8 @@ CREATE TABLE IF NOT EXISTS campaigns (
   user_id INT NOT NULL,
   agent_id INT NOT NULL,
   name VARCHAR(255) NOT NULL,
+  type VARCHAR(30) NOT NULL DEFAULT 'csv',
+  webhook_url VARCHAR(1000) DEFAULT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'processing',
   total_contacts INT NOT NULL DEFAULT 0,
   completed_calls INT NOT NULL DEFAULT 0,
@@ -87,6 +89,7 @@ CREATE TABLE IF NOT EXISTS calls (
   reschedule_at VARCHAR(100) DEFAULT NULL,
   error_message VARCHAR(500) DEFAULT NULL,
   source VARCHAR(20) NOT NULL DEFAULT 'dashboard',
+  idempotency_key VARCHAR(128) DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -96,6 +99,7 @@ CREATE TABLE IF NOT EXISTS calls (
   KEY calls_vistara_call_id_idx (vistara_call_id),
   KEY calls_status_idx (status),
   KEY calls_status_created_at_idx (status, created_at),
+  UNIQUE KEY calls_idempotency_key_unique (idempotency_key),
   CONSTRAINT calls_campaign_id_fk FOREIGN KEY (campaign_id) REFERENCES campaigns (id) ON DELETE CASCADE,
   CONSTRAINT calls_user_id_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
   CONSTRAINT calls_agent_id_fk FOREIGN KEY (agent_id) REFERENCES agents (id) ON DELETE RESTRICT
@@ -115,4 +119,29 @@ CREATE TABLE IF NOT EXISTS wallet_transactions (
   KEY wallet_transactions_user_id_idx (user_id),
   CONSTRAINT wallet_transactions_user_id_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
   CONSTRAINT wallet_transactions_created_by_fk FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ── API Rate Limits: persistent per-user request counts per minute window ──
+CREATE TABLE IF NOT EXISTS api_rate_limits (
+  user_id INT NOT NULL,
+  window_start INT NOT NULL,
+  request_count INT NOT NULL DEFAULT 1,
+  PRIMARY KEY (user_id, window_start),
+  CONSTRAINT api_rate_limits_user_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ── Webhook Delivery Logs: audit trail and retry records for campaign outcome webhooks ──
+CREATE TABLE IF NOT EXISTS webhook_delivery_logs (
+  id INT NOT NULL AUTO_INCREMENT,
+  call_id INT NOT NULL,
+  campaign_id INT NOT NULL,
+  webhook_url VARCHAR(1000) NOT NULL,
+  attempt TINYINT NOT NULL DEFAULT 1,
+  status_code SMALLINT DEFAULT NULL,
+  delivered TINYINT(1) NOT NULL DEFAULT 0,
+  error_message VARCHAR(500) DEFAULT NULL,
+  attempted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY wdl_call_id_idx (call_id),
+  KEY wdl_campaign_id_idx (campaign_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -6,10 +6,35 @@ import { publicInitiateCallSchema } from '@/lib/validation';
 import { normalizePhone } from '@/lib/phone';
 import { dispatchQueuedCalls } from '@/lib/queue';
 import type { ResultSetHeader } from 'mysql2';
-import type { AgentRow } from '@/types';
+import type { AgentRow, CallRow, CampaignRow } from '@/types';
 
 export const POST = withApiErrors(async (request: Request) => {
   const user = await requireApiKeyUser(request);
+
+  // 1. Check optional Idempotency-Key header to avoid duplicate calls on network retries
+  const rawIdempotencyKey = request.headers.get('idempotency-key') || request.headers.get('x-idempotency-key');
+  const idempotencyKey = rawIdempotencyKey?.trim().slice(0, 128) || null;
+
+  if (idempotencyKey) {
+    const [existingRows] = await pool.query(
+      'SELECT id, campaign_id, phone, status FROM calls WHERE idempotency_key = ? AND user_id = ? LIMIT 1',
+      [idempotencyKey, user.id]
+    );
+    const existing = (existingRows as CallRow[])[0];
+    if (existing) {
+      return NextResponse.json({
+        success: true,
+        call_id: existing.id,
+        callId: existing.id,
+        campaign_id: existing.campaign_id,
+        status: existing.status,
+        phone: existing.phone,
+        message: 'Call already queued (idempotent request)',
+      });
+    }
+  }
+
+  // 2. Validate request body
   const body = publicInitiateCallSchema.parse(await request.json());
 
   const phone = normalizePhone(body.phone);
@@ -19,21 +44,84 @@ export const POST = withApiErrors(async (request: Request) => {
     return jsonError('Insufficient wallet balance', 402);
   }
 
-  const [agentRows] = await pool.query(
-    'SELECT * FROM agents WHERE id = ? AND user_id = ? AND (status = \'active\' OR (status IS NULL AND is_active = 1)) LIMIT 1',
-    [body.agentId, user.id]
-  );
-  const agent = (agentRows as AgentRow[])[0];
-  if (!agent) return jsonError('Agent not found', 404);
+  let effectiveAgentId: number;
+  let effectiveCampaignId: number | null = null;
 
-  const [result] = await pool.query(
-    `INSERT INTO calls (campaign_id, user_id, agent_id, phone, name, status, source, metadata)
-     VALUES (NULL, ?, ?, ?, ?, 'queued', 'api', ?)`,
-    [user.id, body.agentId, phone, body.name || null, body.metadata ? JSON.stringify(body.metadata) : null]
-  );
-  const callId = (result as ResultSetHeader).insertId;
+  if (body.campaignId) {
+    const [campaignRows] = await pool.query(
+      'SELECT id, agent_id, status FROM campaigns WHERE id = ? AND user_id = ? LIMIT 1',
+      [body.campaignId, user.id]
+    );
+    const campaign = (campaignRows as CampaignRow[])[0];
+    if (!campaign) return jsonError('Campaign not found', 404);
+    if (campaign.status === 'paused') return jsonError('Campaign is paused', 400);
 
+    effectiveCampaignId = campaign.id;
+    effectiveAgentId = campaign.agent_id;
+  } else {
+    const [agentRows] = await pool.query(
+      'SELECT * FROM agents WHERE id = ? AND user_id = ? AND (status = \'active\' OR (status IS NULL AND is_active = 1)) LIMIT 1',
+      [body.agentId, user.id]
+    );
+    const agent = (agentRows as AgentRow[])[0];
+    if (!agent) return jsonError('Agent not found', 404);
+
+    effectiveAgentId = agent.id;
+  }
+
+  // 3. Insert call record with optional idempotency key
+  let callId: number;
+  try {
+    const [result] = await pool.query(
+      `INSERT INTO calls (campaign_id, user_id, agent_id, phone, name, status, source, metadata, idempotency_key)
+       VALUES (?, ?, ?, ?, ?, 'queued', 'api', ?, ?)`,
+      [
+        effectiveCampaignId,
+        user.id,
+        effectiveAgentId,
+        phone,
+        body.name || null,
+        body.metadata ? JSON.stringify(body.metadata) : null,
+        idempotencyKey,
+      ]
+    );
+    callId = (result as ResultSetHeader).insertId;
+
+    if (effectiveCampaignId) {
+      await pool.query('UPDATE campaigns SET total_contacts = total_contacts + 1 WHERE id = ?', [effectiveCampaignId]);
+    }
+  } catch (err: unknown) {
+    if (idempotencyKey && (err as { code?: string })?.code === 'ER_DUP_ENTRY') {
+      const [existingRows] = await pool.query(
+        'SELECT id, campaign_id, phone, status FROM calls WHERE idempotency_key = ? AND user_id = ? LIMIT 1',
+        [idempotencyKey, user.id]
+      );
+      const existing = (existingRows as CallRow[])[0];
+      if (existing) {
+        return NextResponse.json({
+          success: true,
+          call_id: existing.id,
+          callId: existing.id,
+          campaign_id: existing.campaign_id,
+          status: existing.status,
+          phone: existing.phone,
+          message: 'Call already queued (idempotent request)',
+        });
+      }
+    }
+    throw err;
+  }
+
+  // 4. Dispatch call immediately if capacity allows
   dispatchQueuedCalls();
 
-  return NextResponse.json({ success: true, callId, message: 'Call queued successfully' });
+  return NextResponse.json({
+    success: true,
+    call_id: callId,
+    callId,
+    campaign_id: effectiveCampaignId,
+    status: 'queued',
+    phone,
+    message: 'Call queued successfully',
+  });
 });

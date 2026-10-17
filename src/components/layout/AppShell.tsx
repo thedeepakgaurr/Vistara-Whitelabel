@@ -27,6 +27,7 @@ const NAV_SECTIONS = {
     { href: '/admin/agents', label: 'Agents', icon: Bot },
     { href: '/admin/campaigns', label: 'Campaigns', icon: Megaphone },
     { href: '/admin/calls', label: 'Calls', icon: PhoneCall },
+    { href: '/admin/developer', label: 'Developer', icon: Code2 },
   ],
   dashboard: [
     { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },

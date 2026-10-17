@@ -50,7 +50,7 @@ if ($LASTEXITCODE -ne 0) {
 # 4. Merge, install dependencies, run migrations, build Next.js, and restart PM2 on VPS
 Write-Host "Merging, installing deps, building Next.js, and restarting PM2 on VPS..." -ForegroundColor Cyan
 
-$migrateCmd = if (-not $SkipDbMigrate) { "node --env-file=.env scripts/migrate-agent-builder.mjs && " } else { "" }
+$migrateCmd = if (-not $SkipDbMigrate) { "node --env-file=.env scripts/migrate-agent-builder.mjs && node --env-file=.env scripts/migrate-campaign-api-type.mjs && " } else { "" }
 
 $remoteScript = "cd $RemoteDir && " +
     "git checkout package-lock.json && " +

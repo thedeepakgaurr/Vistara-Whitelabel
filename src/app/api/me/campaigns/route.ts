@@ -19,6 +19,27 @@ export const POST = withApiErrors(async (request: Request) => {
   const agent = (agentRows as AgentRow[])[0];
   if (!agent) return jsonError('Selected agent is not available to your account', 404);
 
+  const webhookUrl = body.webhookUrl?.trim() || null;
+  const isApiCampaign = body.type === 'api';
+
+  if (isApiCampaign) {
+    const [result] = await pool.query(
+      `INSERT INTO campaigns (user_id, agent_id, name, type, webhook_url, status, total_contacts)
+       VALUES (?, ?, ?, 'api', ?, 'active', 0)`,
+      [user.id, body.agentId, body.name, webhookUrl]
+    );
+    const campaignId = (result as ResultSetHeader).insertId;
+
+    return NextResponse.json({
+      success: true,
+      id: campaignId,
+      type: 'api',
+      webhookUrl,
+      contactsQueued: 0,
+      contactsSkipped: 0,
+    });
+  }
+
   const validContacts = body.contacts
     .map((c) => ({
       phone: normalizePhone(c.phone),
@@ -33,8 +54,9 @@ export const POST = withApiErrors(async (request: Request) => {
 
   const campaignId = await withTransaction(async (conn) => {
     const [result] = await conn.query(
-      `INSERT INTO campaigns (user_id, agent_id, name, status, total_contacts) VALUES (?, ?, ?, 'processing', ?)`,
-      [user.id, body.agentId, body.name, validContacts.length]
+      `INSERT INTO campaigns (user_id, agent_id, name, type, webhook_url, status, total_contacts)
+       VALUES (?, ?, ?, 'csv', ?, 'processing', ?)`,
+      [user.id, body.agentId, body.name, webhookUrl, validContacts.length]
     );
     const id = (result as ResultSetHeader).insertId;
 
@@ -61,6 +83,7 @@ export const POST = withApiErrors(async (request: Request) => {
   return NextResponse.json({
     success: true,
     id: campaignId,
+    type: 'csv',
     contactsQueued: validContacts.length,
     contactsSkipped: body.contacts.length - validContacts.length,
   });

@@ -78,12 +78,23 @@ export default async function AdminCampaignsPage({ searchParams }: PageProps<'/a
                 {campaigns.map((c) => (
                   <tr key={c.id} className="border-b border-border last:border-0 hover:bg-surface-hover/60 transition-colors">
                     <td className="px-4 py-2 whitespace-nowrap">
-                      <Link
-                        href={`/admin/campaigns/${c.id}`}
-                        className="font-medium text-foreground hover:text-primary transition-colors text-xs"
-                      >
-                        {c.name}
-                      </Link>
+                      <div className="flex items-center gap-1.5">
+                        <Link
+                          href={`/admin/campaigns/${c.id}`}
+                          className="font-medium text-foreground hover:text-primary transition-colors text-xs"
+                        >
+                          {c.name}
+                        </Link>
+                        {c.type === 'api' ? (
+                          <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                            API
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-muted text-muted-foreground border border-border">
+                            CSV
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-2 whitespace-nowrap text-xs">
                       <Link

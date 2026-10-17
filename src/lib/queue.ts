@@ -64,11 +64,11 @@ async function claimQueuedCalls(limit: number): Promise<ClaimedCall[]> {
 async function markCampaignProgressOnFailure(campaignId: number) {
   await pool.query('UPDATE campaigns SET completed_calls = completed_calls + 1 WHERE id = ?', [campaignId]);
   const [rows] = await pool.query(
-    'SELECT total_contacts, completed_calls FROM campaigns WHERE id = ? LIMIT 1',
+    'SELECT total_contacts, completed_calls, type FROM campaigns WHERE id = ? LIMIT 1',
     [campaignId]
   );
-  const progress = (rows as { total_contacts: number; completed_calls: number }[])[0];
-  if (progress && progress.completed_calls >= progress.total_contacts) {
+  const progress = (rows as { total_contacts: number; completed_calls: number; type?: string }[])[0];
+  if (progress && progress.type !== 'api' && progress.completed_calls >= progress.total_contacts) {
     await pool.query("UPDATE campaigns SET status = 'completed' WHERE id = ?", [campaignId]);
   }
 }

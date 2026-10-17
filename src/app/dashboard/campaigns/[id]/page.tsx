@@ -19,8 +19,9 @@ import { CampaignStatusBadge } from '@/components/ui/Badge';
 import { CampaignPauseResumeButton } from '@/components/dashboard/CampaignPauseResumeButton';
 import { CampaignProgressBar } from '@/components/dashboard/CampaignProgressBar';
 import { CampaignCallsTable } from '@/components/dashboard/CampaignCallsTable';
+import { CampaignApiIntegrationBox } from '@/components/campaigns/CampaignApiIntegrationBox';
 import { formatCurrency, formatDateTime, formatDuration } from '@/lib/format';
-import type { CallRow, CampaignRow } from '@/types';
+import type { CallRow, CampaignRow, WebhookDeliveryLogRow } from '@/types';
 
 async function getCampaign(id: string, userId: number) {
   const [rows] = await pool.query(
@@ -40,9 +41,21 @@ async function getCampaign(id: string, userId: number) {
     [id]
   );
 
+  let deliveryLogs: WebhookDeliveryLogRow[] = [];
+  try {
+    const [logRows] = await pool.query(
+      'SELECT * FROM webhook_delivery_logs WHERE campaign_id = ? ORDER BY attempted_at DESC LIMIT 10',
+      [id]
+    );
+    deliveryLogs = logRows as WebhookDeliveryLogRow[];
+  } catch {
+    deliveryLogs = [];
+  }
+
   return {
     campaign,
     calls: calls as (CallRow & { agent_name: string })[],
+    deliveryLogs,
   };
 }
 
@@ -54,7 +67,7 @@ export default async function CampaignDetailPage({ params }: PageProps<'/dashboa
   const result = await getCampaign(id, user.id);
   if (!result) notFound();
 
-  const { campaign, calls } = result;
+  const { campaign, calls, deliveryLogs } = result;
 
   // Compute calculated metrics
   const totalCalls = campaign.total_contacts;
@@ -93,6 +106,15 @@ export default async function CampaignDetailPage({ params }: PageProps<'/dashboa
                 {campaign.name}
               </h1>
               <CampaignStatusBadge status={campaign.status} />
+              {campaign.type === 'api' ? (
+                <span className="inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                  API Campaign
+                </span>
+              ) : (
+                <span className="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground border border-border">
+                  CSV Campaign
+                </span>
+              )}
               <span className="rounded-md border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground">
                 ID #{campaign.id}
               </span>
@@ -112,6 +134,16 @@ export default async function CampaignDetailPage({ params }: PageProps<'/dashboa
           <CampaignPauseResumeButton campaignId={campaign.id} status={campaign.status} />
         </div>
       </div>
+
+      {/* API Campaign Integration Box */}
+      {campaign.type === 'api' && (
+        <CampaignApiIntegrationBox
+          campaignId={campaign.id}
+          webhookUrl={campaign.webhook_url}
+          deliveryLogs={deliveryLogs}
+          apiKeyPlaceholder={user.api_key}
+        />
+      )}
 
       {/* Progress Bar Component */}
       <CampaignProgressBar
