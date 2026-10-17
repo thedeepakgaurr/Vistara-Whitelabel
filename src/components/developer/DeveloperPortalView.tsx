@@ -354,8 +354,8 @@ echo $response;
             <ShieldCheck className="size-4" />
           </div>
           <div className="min-w-0">
-            <div className="text-[11px] font-medium text-muted-foreground">Rate Limit</div>
-            <div className="text-xs font-semibold text-foreground">100 requests / minute</div>
+            <div className="text-[11px] font-medium text-muted-foreground">API Rate Limits</div>
+            <div className="text-xs font-semibold text-foreground">1,000 req/min (calls) · 100 req/min (poll)</div>
           </div>
         </div>
 
@@ -777,6 +777,17 @@ echo $response;
                 <span className="text-muted-foreground">— Initiate an on-demand AI voice call</span>
               </div>
 
+              {/* Rate Limit Notice for Call Initiation */}
+              <div className="rounded-lg border border-border bg-surface-hover/30 p-3 flex items-start gap-2.5">
+                <Clock className="size-4 text-primary shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <div className="font-semibold text-foreground">MySQL-Backed Rate Limit: 1,000 requests / minute</div>
+                  <p className="text-muted-foreground">
+                    High-throughput call initiation limit. Responses include <code className="bg-black/20 px-1 py-0.5 rounded text-[11px] font-mono">X-RateLimit-Limit: 1000</code> and remaining counters.
+                  </p>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <h4 className="font-semibold text-foreground text-xs uppercase tracking-wider text-muted-foreground">Headers</h4>
                 <div className="overflow-x-auto rounded-lg border border-border">
@@ -832,7 +843,7 @@ echo $response;
                         <td className="px-3 py-2 font-mono font-medium text-foreground">campaignId</td>
                         <td className="px-3 py-2 text-muted-foreground">integer</td>
                         <td className="px-3 py-2 text-foreground font-medium">Recommended</td>
-                        <td className="px-3 py-2 text-muted-foreground">Numeric ID of your campaign (either campaignId or agentId must be provided).</td>
+                        <td className="px-3 py-2 text-muted-foreground">Numeric ID of your API campaign (Strict limit: up to 50,000 contacts per campaign).</td>
                       </tr>
                       <tr>
                         <td className="px-3 py-2 font-mono font-medium text-foreground">agentId</td>
@@ -844,7 +855,9 @@ echo $response;
                         <td className="px-3 py-2 font-mono font-medium text-foreground">phone</td>
                         <td className="px-3 py-2 text-muted-foreground">string</td>
                         <td className="px-3 py-2 text-primary font-medium">Yes</td>
-                        <td className="px-3 py-2 text-muted-foreground">E.164 phone number (e.g. <code className="bg-black/20 px-1 py-0.5 rounded">+919876543210</code>).</td>
+                        <td className="px-3 py-2 text-muted-foreground">
+                          Destination phone number. Supports 10, 12, or 13 digits (e.g. 10-digit Indian mobile: <code className="bg-black/20 px-1 py-0.5 rounded">9876543210</code>, 12-digit with 91: <code className="bg-black/20 px-1 py-0.5 rounded">919876543210</code>, or with plus: <code className="bg-black/20 px-1 py-0.5 rounded">+919876543210</code>). Automatically normalized to standard E.164.
+                        </td>
                       </tr>
                       <tr>
                         <td className="px-3 py-2 font-mono font-medium text-foreground">name</td>

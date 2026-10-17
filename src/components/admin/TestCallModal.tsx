@@ -6,7 +6,6 @@ import {
   Plus,
   Trash2,
   RefreshCw,
-  Sparkles,
 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';

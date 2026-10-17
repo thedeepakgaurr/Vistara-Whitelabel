@@ -9,8 +9,8 @@ export const GET = withApiErrors(async (request: Request, { params }: { params: 
   const user = await requireApiKeyUser(request);
   const { id } = await params;
 
-  // 1. Check user-level rate limit (100 req/minute)
-  const rateLimit = await checkRateLimit(user.id, 100);
+  // 1. Check user-level rate limit for status polling (100 req/minute)
+  const rateLimit = await checkRateLimit(user.id, 100, 'call_status');
 
   const rateLimitHeaders = {
     'X-RateLimit-Limit': '100',
@@ -21,7 +21,7 @@ export const GET = withApiErrors(async (request: Request, { params }: { params: 
   if (!rateLimit.allowed) {
     return NextResponse.json(
       {
-        error: 'Rate limit exceeded. Maximum 100 requests per minute.',
+        error: 'Rate limit exceeded. Maximum 100 requests per minute for status polling.',
         retryAfterSeconds: rateLimit.retryAfterSeconds,
       },
       {

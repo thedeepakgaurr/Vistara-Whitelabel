@@ -70,20 +70,27 @@ async function main() {
     console.log('Index calls_idempotency_key_unique already exists.');
   }
 
-  // 5. Create api_rate_limits table
+  // 5. Create api_rate_limits table with action column
   if (!(await hasTable('api_rate_limits'))) {
     console.log('Creating table: api_rate_limits');
     await conn.query(`
       CREATE TABLE IF NOT EXISTS api_rate_limits (
         user_id INT NOT NULL,
         window_start INT NOT NULL,
+        action VARCHAR(32) NOT NULL DEFAULT 'default',
         request_count INT NOT NULL DEFAULT 1,
-        PRIMARY KEY (user_id, window_start),
+        PRIMARY KEY (user_id, window_start, action),
         CONSTRAINT api_rate_limits_user_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
   } else {
-    console.log('Table api_rate_limits already exists.');
+    if (!(await hasColumn('api_rate_limits', 'action'))) {
+      console.log('Adding column: action to api_rate_limits table');
+      await conn.query(`ALTER TABLE api_rate_limits ADD COLUMN action VARCHAR(32) NOT NULL DEFAULT 'default'`);
+      await conn.query(`ALTER TABLE api_rate_limits DROP PRIMARY KEY, ADD PRIMARY KEY (user_id, window_start, action)`);
+    } else {
+      console.log('Column action already exists in api_rate_limits table.');
+    }
   }
 
   // 6. Create webhook_delivery_logs table

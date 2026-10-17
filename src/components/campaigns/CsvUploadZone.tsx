@@ -76,6 +76,12 @@ export function CsvUploadZone({ onContactsChange, error }: CsvUploadZoneProps) {
         setParseError('The file has headers but no data rows.');
         return;
       }
+      if (rows.length > 10000) {
+        setParseError(
+          `The uploaded file contains ${rows.length.toLocaleString()} rows. Upload campaigns are strictly limited to a maximum of 10,000 contacts per campaign.`
+        );
+        return;
+      }
 
       setFileName(file.name);
       setFileSize(formatFileSize(file.size));

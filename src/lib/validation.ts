@@ -89,7 +89,11 @@ export const createCampaignSchema = z
     agentId: z.coerce.number().int().positive('Select an agent'),
     type: z.enum(['csv', 'api']).default('csv'),
     webhookUrl: z.string().url('Must be a valid URL starting with http:// or https://').max(1000).optional().or(z.literal('')),
-    contacts: z.array(contactSchema).optional().default([]),
+    contacts: z
+      .array(contactSchema)
+      .max(10000, 'Upload campaigns cannot exceed 10,000 contacts')
+      .optional()
+      .default([]),
   })
   .refine((data) => data.type === 'api' || data.contacts.length > 0, {
     message: 'Add at least one contact for CSV campaign',
@@ -103,7 +107,11 @@ export const adminCreateCampaignSchema = z
     name: z.string().trim().min(1, 'Campaign name is required').max(255),
     type: z.enum(['csv', 'api']).default('csv'),
     webhookUrl: z.string().url('Must be a valid URL starting with http:// or https://').max(1000).optional().or(z.literal('')),
-    contacts: z.array(contactSchema).optional().default([]),
+    contacts: z
+      .array(contactSchema)
+      .max(10000, 'Upload campaigns cannot exceed 10,000 contacts')
+      .optional()
+      .default([]),
   })
   .refine((data) => data.type === 'api' || data.contacts.length > 0, {
     message: 'Add at least one contact for CSV campaign',

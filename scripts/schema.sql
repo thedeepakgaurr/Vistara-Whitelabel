@@ -121,12 +121,13 @@ CREATE TABLE IF NOT EXISTS wallet_transactions (
   CONSTRAINT wallet_transactions_created_by_fk FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ── API Rate Limits: persistent per-user request counts per minute window ──
+-- ── API Rate Limits: persistent per-user request counts per minute window per action ──
 CREATE TABLE IF NOT EXISTS api_rate_limits (
   user_id INT NOT NULL,
   window_start INT NOT NULL,
+  action VARCHAR(32) NOT NULL DEFAULT 'default',
   request_count INT NOT NULL DEFAULT 1,
-  PRIMARY KEY (user_id, window_start),
+  PRIMARY KEY (user_id, window_start, action),
   CONSTRAINT api_rate_limits_user_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

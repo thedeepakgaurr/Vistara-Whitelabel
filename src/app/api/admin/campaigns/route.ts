@@ -62,6 +62,10 @@ export const POST = withApiErrors(async (request: Request) => {
     return jsonError('None of the provided contacts had a valid phone number', 400);
   }
 
+  if (validContacts.length > 10000) {
+    return jsonError('Upload campaigns are strictly limited to a maximum of 10,000 contacts', 400);
+  }
+
   const campaignId = await withTransaction(async (conn) => {
     // If agent was unassigned, assign it to target user
     if (agent.user_id === null) {

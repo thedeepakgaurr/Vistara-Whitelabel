@@ -15,7 +15,11 @@ export interface RateLimitResult {
  * @param userId - ID of the calling user
  * @param limit - Maximum requests permitted in the 60-second window (default 100)
  */
-export async function checkRateLimit(userId: number, limit = 100): Promise<RateLimitResult> {
+export async function checkRateLimit(
+  userId: number,
+  limit = 100,
+  action = 'default'
+): Promise<RateLimitResult> {
   const nowMs = Date.now();
   const nowEpochSec = Math.floor(nowMs / 1000);
   // Current 60-second window start in seconds
@@ -25,18 +29,18 @@ export async function checkRateLimit(userId: number, limit = 100): Promise<RateL
   const retryAfterSeconds = Math.max(1, resetTime - nowEpochSec);
 
   try {
-    // 1. Atomically record or increment the counter for this window
+    // 1. Atomically record or increment the counter for this window & action
     await pool.query(
-      `INSERT INTO api_rate_limits (user_id, window_start, request_count)
-       VALUES (?, ?, 1)
+      `INSERT INTO api_rate_limits (user_id, window_start, action, request_count)
+       VALUES (?, ?, ?, 1)
        ON DUPLICATE KEY UPDATE request_count = request_count + 1`,
-      [userId, windowStart]
+      [userId, windowStart, action]
     );
 
     // 2. Read the current count
     const [rows] = await pool.query(
-      'SELECT request_count FROM api_rate_limits WHERE user_id = ? AND window_start = ? LIMIT 1',
-      [userId, windowStart]
+      'SELECT request_count FROM api_rate_limits WHERE user_id = ? AND window_start = ? AND action = ? LIMIT 1',
+      [userId, windowStart, action]
     );
 
     const count = Number((rows as { request_count: number }[])[0]?.request_count ?? 1);

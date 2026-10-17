@@ -66,7 +66,7 @@ export function CampaignApiIntegrationBox({
                 </span>
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Trigger outbound calls to this campaign anytime via HTTP REST API.
+                Trigger outbound calls to this campaign anytime via HTTP REST API (Capacity: up to 50,000 contacts).
               </p>
             </div>
           </div>
