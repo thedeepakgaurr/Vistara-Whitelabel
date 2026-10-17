@@ -10,13 +10,11 @@ import {
   Copy,
   Check,
   CheckCircle2,
-  AlertCircle,
   Clock,
   ShieldCheck,
   Globe,
   Layers,
   Sparkles,
-  ArrowRight,
   RefreshCw,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/Card';
@@ -302,7 +300,7 @@ echo $response;
         data: json,
       });
       toast.success(`Polled status for Call #${callId}`);
-    } catch (err) {
+    } catch {
       toast.error('Failed to poll call status');
     } finally {
       setPgLoading(false);
