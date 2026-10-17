@@ -44,29 +44,11 @@ interface TestCallModalProps {
   firstMessage?: string | null;
 }
 
-function extractTemplateVariables(...texts: (string | null | undefined)[]): string[] {
-  const vars = new Set<string>();
-  const regex = /\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g;
-  for (const text of texts) {
-    if (!text) continue;
-    let match;
-    while ((match = regex.exec(text)) !== null) {
-      const v = match[1].trim();
-      if (v !== 'name' && v !== 'phone') {
-        vars.add(v);
-      }
-    }
-  }
-  return Array.from(vars);
-}
-
 export function TestCallModal({
   open,
   onClose,
   agentId,
   agentName,
-  systemInstruction,
-  firstMessage,
 }: TestCallModalProps) {
   const toast = useToast();
 
@@ -76,9 +58,6 @@ export function TestCallModal({
   const [testCalling, setTestCalling] = useState(false);
   const [testCallId, setTestCallId] = useState<string | null>(null);
   const [testCallRecord, setTestCallRecord] = useState<TestCallRecord | null>(null);
-
-  // Extract variables from prompt/first_message for quick-add suggestions
-  const detectedVariables = extractTemplateVariables(systemInstruction, firstMessage);
 
   // Reset state when modal closes
   useEffect(() => {
@@ -273,32 +252,6 @@ export function TestCallModal({
               Add Custom Value
             </Button>
           </div>
-
-          {/* Quick-add suggested chips from prompt */}
-          {detectedVariables.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-              <span className="text-[11px] text-muted-foreground">Detected in Prompt:</span>
-              {detectedVariables.map((v) => {
-                const alreadyAdded = customVariables.some((cv) => cv.key.toLowerCase() === v.toLowerCase());
-                return (
-                  <button
-                    key={v}
-                    type="button"
-                    disabled={testCalling || alreadyAdded}
-                    onClick={() => handleAddVariable(v)}
-                    className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-[11px] border transition-colors ${
-                      alreadyAdded
-                        ? 'border-border bg-muted/20 text-muted-foreground/60 cursor-default'
-                        : 'border-primary/40 bg-primary-soft/30 text-primary hover:bg-primary-soft cursor-pointer'
-                    }`}
-                  >
-                    <span>{`{{${v}}}`}</span>
-                    {!alreadyAdded && <Plus className="size-2.5" />}
-                  </button>
-                );
-              })}
-            </div>
-          )}
 
           {/* Custom Variables List */}
           {customVariables.length > 0 && (
