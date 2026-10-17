@@ -7,10 +7,6 @@ import {
   Trash2,
   RefreshCw,
   Sparkles,
-  Volume2,
-  CheckCircle2,
-  AlertCircle,
-  HelpCircle,
 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -59,15 +55,13 @@ export function TestCallModal({
   const [testCallId, setTestCallId] = useState<string | null>(null);
   const [testCallRecord, setTestCallRecord] = useState<TestCallRecord | null>(null);
 
-  // Reset state when modal closes
-  useEffect(() => {
-    if (!open) {
-      setTestCallId(null);
-      setTestCallRecord(null);
-      setTestCalling(false);
-      setCustomVariables([]);
-    }
-  }, [open]);
+  function handleClose() {
+    setTestCallId(null);
+    setTestCallRecord(null);
+    setTestCalling(false);
+    setCustomVariables([]);
+    onClose();
+  }
 
   function handleAddVariable(keyName = '') {
     setCustomVariables((prev) => [
@@ -183,7 +177,7 @@ export function TestCallModal({
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       title={
         <div className="flex items-center gap-2">
           <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
