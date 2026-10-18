@@ -5,21 +5,17 @@ import Link from 'next/link';
 import {
   Code2,
   Terminal,
-  Send,
-  Play,
   Copy,
   Check,
-  CheckCircle2,
   Clock,
   ShieldCheck,
   Globe,
   Layers,
-  Sparkles,
   RefreshCw,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Input, Label } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Input';
 import { ApiKeyPanel } from '@/components/dashboard/ApiKeyPanel';
 import { useToast } from '@/components/ui/Toast';
 
@@ -69,21 +65,6 @@ export function DeveloperPortalView({
   const [showRealKey, setShowRealKey] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  // Playground state
-  const [pgMode, setPgMode] = useState<'campaign' | 'agent'>(campaigns.length > 0 ? 'campaign' : 'agent');
-  const [pgCampaignId, setPgCampaignId] = useState<string>(campaigns.length > 0 ? String(campaigns[0].id) : '');
-  const [pgAgentId, setPgAgentId] = useState<string>(agents.length > 0 ? String(agents[0].id) : '1');
-  const [pgPhone, setPgPhone] = useState('+919876543210');
-  const [pgName, setPgName] = useState('John Doe');
-  const [pgMetadata, setPgMetadata] = useState('{\n  "lead_source": "website_portal",\n  "crm_id": "LEAD-9821"\n}');
-  const [pgIdempotencyKey, setPgIdempotencyKey] = useState('');
-  const [pgLoading, setPgLoading] = useState(false);
-  const [pgResponse, setPgResponse] = useState<{
-    status: number;
-    statusText: string;
-    timeMs: number;
-    data: unknown;
-  } | null>(null);
 
   // Active documentation reference tab
   const [activeRefTab, setActiveRefTab] = useState<RefTab>('initiate');
@@ -208,104 +189,6 @@ echo $response;
     }
   }
 
-  // Handle live playground execution
-  async function runPlayground() {
-    setPgLoading(true);
-    setPgResponse(null);
-
-    let parsedMeta: Record<string, unknown> | undefined = undefined;
-    if (pgMetadata.trim()) {
-      try {
-        parsedMeta = JSON.parse(pgMetadata);
-      } catch {
-        toast.error('Metadata must be valid JSON');
-        setPgLoading(false);
-        return;
-      }
-    }
-
-    const payload: Record<string, unknown> = {
-      phone: pgPhone.trim(),
-      name: pgName.trim() || undefined,
-      metadata: parsedMeta,
-    };
-
-    if (pgMode === 'campaign' && pgCampaignId) {
-      payload.campaignId = Number(pgCampaignId);
-    } else {
-      payload.agentId = Number(pgAgentId);
-    }
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-    };
-
-    if (pgIdempotencyKey.trim()) {
-      headers['Idempotency-Key'] = pgIdempotencyKey.trim();
-    }
-
-    const startTime = performance.now();
-    try {
-      const resp = await fetch('/api/v1/calls', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload),
-      });
-
-      const timeMs = Math.round(performance.now() - startTime);
-      const json = await resp.json().catch(() => ({}));
-
-      setPgResponse({
-        status: resp.status,
-        statusText: resp.statusText || (resp.ok ? 'OK' : 'Error'),
-        timeMs,
-        data: json,
-      });
-
-      if (resp.ok) {
-        toast.success(`Call placed successfully (ID #${(json as { call_id?: number }).call_id})`);
-      } else {
-        toast.error((json as { error?: string }).error || 'API call failed');
-      }
-    } catch (err) {
-      const timeMs = Math.round(performance.now() - startTime);
-      setPgResponse({
-        status: 0,
-        statusText: 'Network Error',
-        timeMs,
-        data: { error: err instanceof Error ? err.message : 'Network failure' },
-      });
-      toast.error('Failed to dispatch request to /api/v1/calls');
-    } finally {
-      setPgLoading(false);
-    }
-  }
-
-  // Poll call status test in playground
-  async function testPollStatus(callId: number) {
-    setPgLoading(true);
-    const startTime = performance.now();
-    try {
-      const resp = await fetch(`/api/v1/calls/${callId}`, {
-        headers: { 'x-api-key': apiKey },
-      });
-      const timeMs = Math.round(performance.now() - startTime);
-      const json = await resp.json().catch(() => ({}));
-
-      setPgResponse({
-        status: resp.status,
-        statusText: resp.statusText || (resp.ok ? 'OK' : 'Error'),
-        timeMs,
-        data: json,
-      });
-      toast.success(`Polled status for Call #${callId}`);
-    } catch {
-      toast.error('Failed to poll call status');
-    } finally {
-      setPgLoading(false);
-    }
-  }
 
   return (
     <div className="space-y-8">
@@ -491,223 +374,6 @@ echo $response;
         </CardBody>
       </Card>
 
-      {/* Live In-Browser API Playground */}
-      <Card className="border-primary/20 shadow-sm overflow-hidden">
-        <CardHeader className="border-b border-border bg-primary/[0.02] py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Play className="size-3.5 fill-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-sm font-semibold">Live In-Browser API Playground</CardTitle>
-                <p className="text-xs text-muted-foreground">
-                  Dispatch a real call immediately via <code className="text-foreground">POST /api/v1/calls</code> and inspect the live JSON response.
-                </p>
-              </div>
-            </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Interactive Tester
-            </span>
-          </div>
-        </CardHeader>
-
-        <CardBody className="p-5 space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Input Form Column */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPgMode('campaign')}
-                  className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
-                    pgMode === 'campaign'
-                      ? 'border-primary bg-primary/10 text-primary font-medium'
-                      : 'border-border text-muted-foreground'
-                  }`}
-                >
-                  By Campaign ID
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPgMode('agent')}
-                  className={`text-xs px-2.5 py-1 rounded-md border transition-colors ${
-                    pgMode === 'agent'
-                      ? 'border-primary bg-primary/10 text-primary font-medium'
-                      : 'border-border text-muted-foreground'
-                  }`}
-                >
-                  By Agent ID
-                </button>
-              </div>
-
-              {pgMode === 'campaign' ? (
-                <div>
-                  <Label htmlFor="pgCampaign">Campaign</Label>
-                  <select
-                    id="pgCampaign"
-                    value={pgCampaignId}
-                    onChange={(e) => setPgCampaignId(e.target.value)}
-                    className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
-                  >
-                    {campaigns.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        #{c.id} - {c.name} ({c.type.toUpperCase()})
-                      </option>
-                    ))}
-                    {campaigns.length === 0 && <option value="">No campaigns found</option>}
-                  </select>
-                </div>
-              ) : (
-                <div>
-                  <Label htmlFor="pgAgent">Agent</Label>
-                  <select
-                    id="pgAgent"
-                    value={pgAgentId}
-                    onChange={(e) => setPgAgentId(e.target.value)}
-                    className="mt-1 block w-full rounded-md border border-border bg-surface px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
-                  >
-                    {agents.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        #{a.id} - {a.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label htmlFor="pgPhone">Phone Number</Label>
-                  <Input
-                    id="pgPhone"
-                    value={pgPhone}
-                    onChange={(e) => setPgPhone(e.target.value)}
-                    placeholder="+919876543210"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="pgName">Customer Name (Optional)</Label>
-                  <Input
-                    id="pgName"
-                    value={pgName}
-                    onChange={(e) => setPgName(e.target.value)}
-                    placeholder="John Doe"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="pgIdemp" className="flex items-center justify-between text-xs">
-                  <span>Idempotency-Key Header (Optional)</span>
-                  <button
-                    type="button"
-                    onClick={() => setPgIdempotencyKey(`idemp_${Date.now()}`)}
-                    className="text-[11px] text-primary hover:underline"
-                  >
-                    Generate random
-                  </button>
-                </Label>
-                <Input
-                  id="pgIdemp"
-                  value={pgIdempotencyKey}
-                  onChange={(e) => setPgIdempotencyKey(e.target.value)}
-                  placeholder="e.g. lead-req-4091"
-                  className="font-mono text-xs"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="pgMeta">Custom Metadata (JSON)</Label>
-                <textarea
-                  id="pgMeta"
-                  rows={3}
-                  value={pgMetadata}
-                  onChange={(e) => setPgMetadata(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-border bg-surface p-2.5 font-mono text-xs text-foreground focus:border-primary focus:outline-none"
-                />
-              </div>
-
-              <Button
-                type="button"
-                onClick={runPlayground}
-                loading={pgLoading}
-                className="w-full gap-2 font-medium"
-              >
-                <Send className="size-4" />
-                Dispatch Live API Call
-              </Button>
-            </div>
-
-            {/* Response Output Column */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                  <Terminal className="size-3.5 text-muted-foreground" />
-                  Live API Response
-                </span>
-                {pgResponse && (
-                  <div className="flex items-center gap-2 text-xs">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold ${
-                        pgResponse.status >= 200 && pgResponse.status < 300
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                      }`}
-                    >
-                      HTTP {pgResponse.status} {pgResponse.statusText}
-                    </span>
-                    <span className="text-muted-foreground text-[11px] font-mono">{pgResponse.timeMs}ms</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="rounded-xl bg-[#0b0b10] p-4 text-xs text-[#e5e5ec] font-mono min-h-[260px] max-h-[380px] overflow-auto border border-border/50">
-                {pgResponse ? (
-                  <pre>
-                    <code>{JSON.stringify(pgResponse.data, null, 2)}</code>
-                  </pre>
-                ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-muted-foreground py-12 text-center">
-                    <Sparkles className="size-8 text-primary/40 mb-2" />
-                    <p className="text-xs font-medium text-foreground">Playground Ready</p>
-                    <p className="text-[11px] max-w-xs mt-1 text-muted-foreground">
-                      Click &ldquo;Dispatch Live API Call&rdquo; to test live authentication, validation, queueing, and response headers.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* If a call ID was created, provide quick button to test GET /api/v1/calls/:id */}
-              {pgResponse &&
-                pgResponse.status >= 200 &&
-                pgResponse.status < 300 &&
-                Boolean((pgResponse.data as { call_id?: number })?.call_id) && (
-                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-center justify-between gap-3 text-xs">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="size-4 text-primary shrink-0" />
-                      <span>
-                        Call <strong>#{(pgResponse.data as { call_id?: number }).call_id}</strong> is queued in database.
-                      </span>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => testPollStatus((pgResponse.data as { call_id?: number }).call_id!)}
-                      loading={pgLoading}
-                      className="text-xs shrink-0"
-                    >
-                      <RefreshCw className="size-3" />
-                      Poll Status (GET)
-                    </Button>
-                  </div>
-                )}
-            </div>
-          </div>
-        </CardBody>
-      </Card>
 
       {/* Comprehensive API Reference Section */}
       <Card>
